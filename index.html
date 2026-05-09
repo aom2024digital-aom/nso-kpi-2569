@@ -2,65 +2,64 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>NSO SATUN KPI 2569 - Final Solution</title>
+    <title>NSO SATUN 2569 - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --primary: #1e1e2d; --accent: #00A3AD; --danger: #ff4d4d; }
-        body { font-family: 'Noto Sans Thai', sans-serif; background: #f4f6f9; display: flex; height: 100vh; margin: 0; font-size: 11px; overflow: hidden; }
+        :root { --primary: #1e293b; --accent: #0284c7; --danger: #dc2626; --bg: #f8fafc; }
+        body { font-family: 'Noto Sans Thai', sans-serif; background: var(--bg); display: flex; height: 100vh; margin: 0; font-size: 11px; overflow: hidden; }
         
-        /* แก้ไข Sidebar ให้ Scroll ได้ */
-        .sidebar { width: 230px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; }
-        .sidebar-menu { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #34495e transparent; }
-        .nav-btn { padding: 10px 18px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; font-size: 11px; }
-        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent); }
+        /* Sidebar */
+        .sidebar { width: 220px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-scroll { flex: 1; overflow-y: auto; }
+        .nav-btn { padding: 10px 15px; color: #cbd5e1; cursor: pointer; border-bottom: 1px solid #334155; text-decoration: none; display: block; }
+        .nav-btn:hover, .nav-btn.active { background: #334155; color: white; border-left: 4px solid var(--accent); }
 
+        /* Main Layout */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-nav { height: 50px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
-        .content-body { flex: 1; padding: 10px; overflow-y: auto; }
+        .top-bar { height: 50px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+        .content-body { flex: 1; padding: 10px; overflow: hidden; display: flex; flex-direction: column; }
         
-        .table-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 8px; max-height: 80vh; overflow: auto; }
+        /* Table Controls */
+        .controls { display: flex; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: auto; flex: 1; }
+        
+        /* Table Styling */
         table { width: 100%; border-collapse: collapse; table-layout: auto; }
-        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; padding: 6px; font-weight: 600; text-align: center; border: 1px solid #eef2f7; }
-        td { border: 1px solid #eef2f7; padding: 4px; vertical-align: middle; background: white !important; }
+        th { background: #f1f5f9 !important; position: sticky; top: 0; z-index: 10; padding: 6px; font-weight: 600; text-align: center; border: 1px solid #e2e8f0; }
+        td { border: 1px solid #e2e8f0; padding: 4px; vertical-align: middle; background: white !important; text-align: center; }
         
-        /* แก้ไขการ Wrap ข้อความในตาราง */
-        .kpi-name-column { 
-            min-width: 180px; 
-            max-width: 280px; 
-            white-space: normal !important; 
-            word-wrap: break-word; 
-            text-align: left !important;
-            line-height: 1.4;
-            padding: 8px !important;
-        }
-
-        .high-alert { color: var(--danger) !important; font-weight: bold; }
-        input { width: 100%; border: none; background: transparent; text-align: center; font-size: 11px; }
-        textarea { width: 100%; min-height: 50px; border: 1px solid #eef2f7; border-radius: 4px; font-size: 10px; padding: 4px; }
-        .chart-box { background: white; padding: 15px; border-radius: 8px; margin-top: 10px; height: 320px; }
+        /* Specific Column Widths & Wrap */
+        .wrap-text { white-space: normal !important; min-width: 150px; max-width: 250px; word-wrap: break-word; text-align: left !important; line-height: 1.4; }
+        .analysis-box { width: 220px; min-height: 60px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 10px; padding: 5px; text-align: left; resize: vertical; }
+        .file-input { font-size: 9px; width: 140px; }
+        
+        input[type="text"] { width: 100%; min-width: 40px; border: 1px solid transparent; text-align: center; font-size: 11px; padding: 2px; }
+        input[type="text"]:focus { border: 1px solid var(--accent); outline: none; background: #f0f9ff; }
+        
+        .alert-red { color: var(--danger) !important; font-weight: bold; background-color: #fef2f2 !important; }
+        .d-none-col { display: none !important; }
     </style>
 </head>
 <body>
 
 <nav class="sidebar">
     <div class="p-3 text-center border-bottom border-secondary">
-        <h6 class="fw-bold mb-0">NSO SATUN 2569</h6>
+        <h6 class="fw-bold mb-0 text-white">NSO SATUN 2569</h6>
     </div>
-    <div class="sidebar-menu">
+    <div class="sidebar-scroll">
         <div id="ward-nav-list"></div>
-        <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>
-        <a class="nav-btn" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC Analytics</a>
+        <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder2-open"></i> กองการ_68</a>
+        <a class="nav-btn" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC (Table Only)</a>
         <a class="nav-btn" onclick="loadTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>
     </div>
 </nav>
 
 <main class="main-content">
-    <div class="top-nav">
+    <div class="top-bar">
         <h6 id="current-title" class="mb-0 text-primary fw-bold">กรุณาเลือกเมนู</h6>
         <div class="d-flex gap-2">
             <button class="btn btn-sm btn-primary" onclick="saveData()"><i class="bi bi-save"></i> บันทึก</button>
@@ -71,21 +70,22 @@
     </div>
 
     <div class="content-body" id="capture-zone">
-        <div class="d-flex gap-2 mb-2">
-            <input type="text" id="kpi-search" class="form-control form-control-sm" style="max-width:220px" placeholder="🔍 ค้นหาตัวชี้วัด..." onkeyup="filterRows()">
+        <div class="controls">
+            <input type="text" id="kpi-search" class="form-control form-control-sm" style="max-width:250px" placeholder="🔍 ค้นหา ตัวชี้วัด/ข้อมูล..." onkeyup="filterRows()">
+            <select id="month-filter" class="form-select form-select-sm" style="max-width:180px" onchange="filterColumns()">
+                <option value="ALL">-- แสดงทุกเดือน --</option>
+            </select>
         </div>
-        <div id="table-container" class="table-card overflow-auto">
-            <p class="text-center py-5 text-muted">พร้อมใช้งาน เลือกเมนูเพื่อดึงข้อมูล</p>
-        </div>
-        <div id="ic-chart-area" class="d-none">
-            <div class="chart-box"><canvas id="icLine"></canvas></div>
+        
+        <div id="table-container" class="table-container">
+            <p class="text-center py-5 text-muted">พร้อมใช้งาน กรุณาเลือกเมนูทางซ้ายมือ</p>
         </div>
     </div>
 </main>
 
 <script>
     const API_URI = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
-    let activeSheet = "", cachedData = [], chartInstance = null;
+    let activeSheet = "", cachedData = [];
 
     window.onload = () => {
         fetch(`${API_URI}?action=getWards`).then(res => res.json()).then(wards => {
@@ -98,8 +98,7 @@
     function loadTab(name) {
         activeSheet = name;
         document.getElementById('current-title').innerText = "📍 " + name;
-        document.getElementById('ic-chart-area').classList.add('d-none');
-        document.getElementById('cap-btn').classList.add('d-none');
+        document.getElementById('cap-btn').classList.remove('d-none');
         fetchData();
     }
 
@@ -109,94 +108,145 @@
         fetch(`${API_URI}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
             cachedData = data;
             renderTable(data);
-            if(activeSheet === 'IC') renderIC(data);
+            setupMonthFilter(data[0]);
         });
     }
 
     function renderTable(data) {
         if(!data || data.length === 0) return;
         const head = data[0];
-        let html = `<table id="main-table"><thead><tr>`;
-        head.forEach(h => html += `<th>${h}</th>`);
+        let html = `<table id="data-table"><thead><tr>`;
+        
+        // Render Headers (ซ่อนคอลัมน์ หาร, หมายเหตุ)
+        head.forEach((h, idx) => {
+            let hideClass = (h === "หาร" || h === "หมายเหตุ") ? "d-none-col" : "";
+            html += `<th class="${hideClass}" data-col="${idx}">${h}</th>`;
+        });
         html += `<th>แนบไฟล์</th></tr></thead><tbody>`;
 
         const targetIdx = head.indexOf('เป้าหมาย');
-        const kpiIdx = head.indexOf('รายการตัวชี้วัด');
-
+        
+        // Render Rows
         for(let i=1; i<data.length; i++){
             html += `<tr>`;
             data[i].forEach((cell, idx) => {
-                let targetVal = parseFloat(data[i][targetIdx]) || 0;
-                let currentVal = parseFloat(cell);
-                let alertClass = (!isNaN(currentVal) && currentVal > targetVal) ? "high-alert" : "";
-                let isReadOnly = (activeSheet === 'NQA' && head[idx] !== 'วิเคราะห์');
-                let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+                let colName = head[idx];
+                let isHidden = (colName === "หาร" || colName === "หมายเหตุ") ? "d-none-col" : "";
+                let isWrap = ["รายการตัวชี้วัด", "ข้อมูล", "ชื่อข้อมูล", "ตำแหน่ง"].includes(colName) ? "wrap-text" : "";
                 
-                // คอลัมน์รายการตัวชี้วัดให้ตัดคำบรรทัดล่าง
-                let cellClass = (idx === kpiIdx) ? "kpi-name-column" : "";
+                // Alert Logic (ถ้ามีเป้าหมายและค่าปัจจุบันมากกว่าเป้าหมาย)
+                let targetVal = parseFloat(data[i][targetIdx]);
+                let numVal = parseFloat(cell);
+                let alertClass = (targetIdx !== -1 && !isNaN(targetVal) && !isNaN(numVal) && numVal > targetVal) ? "alert-red" : "";
+                
+                let isReadOnly = (activeSheet === 'NQA' && colName !== 'วิเคราะห์');
+                let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
 
-                if(head[idx] === 'วิเคราะห์') {
-                    html += `<td><textarea onchange="updateCache(${i},${idx},this.value)">${display}</textarea></td>`;
+                if(colName === 'วิเคราะห์') {
+                    html += `<td class="${isHidden}"><textarea class="analysis-box" onchange="updateCache(${i},${idx},this.value)">${display}</textarea></td>`;
                 } else {
-                    html += `<td class="${cellClass}">${isReadOnly ? `<span>${display}</span>` : `<input type="text" class="${alertClass}" value="${display}" onchange="updateCache(${i},${idx},this.value)">`}</td>`;
+                    html += `<td class="${isHidden} ${isWrap}" data-col="${idx}">`;
+                    if(isReadOnly) {
+                        html += `<span class="${alertClass}">${display}</span>`;
+                    } else {
+                        html += `<input type="text" class="${alertClass}" value="${display}" onchange="updateCache(${i},${idx},this.value)">`;
+                    }
+                    html += `</td>`;
                 }
             });
-            html += `<td class="text-center"><input type="file" style="font-size:9px" onchange="doUpload(this, ${i})"></td></tr>`;
+            html += `<td class="text-center"><input type="file" class="file-input" onchange="uploadFile(this, ${i})"></td></tr>`;
         }
         html += `</tbody></table>`;
         document.getElementById('table-container').innerHTML = html;
     }
 
-    function updateCache(r, c, v) { cachedData[r][c] = v; }
+    function updateCache(r, c, v) { 
+        cachedData[r][c] = v;
+        // Re-evaluate alert color on change
+        const head = cachedData[0];
+        const targetIdx = head.indexOf('เป้าหมาย');
+        if(targetIdx !== -1) {
+            let targetVal = parseFloat(cachedData[r][targetIdx]);
+            let numVal = parseFloat(v);
+            let inputEl = document.querySelector(`#data-table tbody tr:nth-child(${r}) td[data-col="${c}"] input`);
+            if(inputEl) {
+                if(!isNaN(numVal) && numVal > targetVal) inputEl.classList.add('alert-red');
+                else inputEl.classList.remove('alert-red');
+            }
+        }
+    }
 
-    function renderIC(data) {
-        document.getElementById('ic-chart-area').classList.remove('d-none');
-        document.getElementById('cap-btn').classList.remove('d-none');
-        const labels = ["63","64","65","66","67","68","ต.ค.-68","พ.ย.-68","ธ.ค.-68","มค.69","กพ","มีค","เมย","พค","มิย","กค","สค","กย"];
-        const vals = data[1].slice(2, 20);
-        const goal = parseFloat(data[1][1]) || 0;
-
-        if(chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(document.getElementById('icLine'), {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'ผลลัพธ์', data: vals, borderColor: '#00A3AD', tension: 0.3, fill: false },
-                    { label: 'เกณฑ์', data: Array(labels.length).fill(goal), borderColor: 'red', borderDash: [5,5], pointRadius: 0 }
-                ]
-            },
-            options: { maintainAspectRatio: false }
+    function setupMonthFilter(head) {
+        const sel = document.getElementById('month-filter');
+        sel.innerHTML = '<option value="ALL">-- แสดงทุกเดือน --</option>';
+        const months = ["ตค", "พย", "ธค", "มค", "กพ", "มีค", "เมย", "พค", "มิย", "กค", "สค", "กย", "ต.ค.", "พ.ย.", "ธ.ค."];
+        head.forEach((h, idx) => {
+            if(months.some(m => h.includes(m))) {
+                sel.add(new Option(h, idx));
+            }
         });
     }
 
     function filterRows() {
         const q = document.getElementById('kpi-search').value.toLowerCase();
-        const rows = document.querySelectorAll("#main-table tbody tr");
+        const rows = document.querySelectorAll("#data-table tbody tr");
         rows.forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none");
+    }
+
+    function filterColumns() {
+        const selectedIdx = document.getElementById('month-filter').value;
+        const table = document.getElementById('data-table');
+        const months = ["ตค", "พย", "ธค", "มค", "กพ", "มีค", "เมย", "พค", "มิย", "กค", "สค", "กย", "ต.ค.", "พ.ย.", "ธ.ค."];
+        const head = cachedData[0];
+        
+        for(let i=0; i<head.length; i++) {
+            let isMonthCol = months.some(m => head[i].includes(m));
+            if(!isMonthCol) continue; // ข้ามคอลัมน์ที่ไม่ใช่เดือน
+            
+            let shouldHide = (selectedIdx !== "ALL" && i.toString() !== selectedIdx);
+            
+            // ซ่อน/แสดง Header
+            let th = table.querySelector(`th[data-col="${i}"]`);
+            if(th) th.style.display = shouldHide ? "none" : "";
+            
+            // ซ่อน/แสดง Cell ในแต่ละแถว
+            let trs = table.querySelectorAll("tbody tr");
+            trs.forEach(tr => {
+                let td = tr.querySelector(`td[data-col="${i}"]`);
+                if(td) td.style.display = shouldHide ? "none" : "";
+            });
+        }
     }
 
     function saveData() {
         const body = cachedData.slice(1);
         fetch(API_URI, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: body }) })
-        .then(() => alert("✅ ส่งคำสั่งบันทึกสำเร็จ"));
+        .then(() => alert("✅ ส่งคำสั่งบันทึกสำเร็จ (รออัปเดตใน Sheet 3-5 วินาที)"));
     }
 
-    async function doUpload(input, rIdx) {
+    async function uploadFile(input, rIdx) {
+        if(!input.files[0]) return;
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = async (e) => {
+            input.disabled = true;
+            alert("กำลังอัปโหลดไฟล์...");
             const res = await fetch(API_URI, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
             const url = await res.text();
+            
             const anaIdx = cachedData[0].indexOf('วิเคราะห์');
-            cachedData[rIdx][anaIdx] += `\n📎 ไฟล์: ${url}`;
-            alert("📁 อัปโหลดและบันทึก Link แล้ว");
-            fetchData();
+            cachedData[rIdx][anaIdx] += `\n📎 ไฟล์แนบ: ${url}`;
+            input.disabled = false;
+            alert("📁 อัปโหลดสำเร็จ! นำ Link ไปใส่ในช่องวิเคราะห์แล้ว");
+            
+            // Update UI
+            let textarea = document.querySelector(`#data-table tbody tr:nth-child(${rIdx}) .analysis-box`);
+            if(textarea) textarea.value = cachedData[rIdx][anaIdx];
         };
         reader.readAsDataURL(file);
     }
 
-    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('main-table')), `${activeSheet}_Data.xlsx`); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('data-table')), `${activeSheet}_Data.xlsx`); }
     function doCapture() { html2canvas(document.getElementById('capture-zone')).then(cv => { let a = document.createElement('a'); a.download = 'Capture.png'; a.href = cv.toDataURL(); a.click(); }); }
 </script>
 </body>
