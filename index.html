@@ -1,112 +1,346 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-  <base target="_top">
-  <meta charset="utf-8">
-  <style>
-    body {
-      font-family: 'Sarabun', sans-serif;
-      padding: 30px;
-      max-width: 500px;
-      margin: auto;
-    }
-    .card {
-      border: 1px solid #ddd;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .btn-upload {
-      background-color: #0d6efd;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    .btn-upload:hover {
-      background-color: #0b5ed7;
-    }
-    .btn-view {
-      background-color: #198754;
-      color: white;
-      padding: 10px 20px;
-      text-decoration: none;
-      border-radius: 5px;
-      display: inline-block;
-      margin-top: 15px;
-    }
-    .btn-view:hover {
-      background-color: #157347;
-    }
-    #statusMessage {
-      margin-top: 15px;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>NSO SATUN 2569</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root { --primary: #2C3E50; --accent: #1ABC9C; --danger: #E74C3C; --bg: #F4F7F6; }
+        body { font-family: 'Noto Sans Thai', sans-serif; background: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 11px; }
+        
+        .topbar { background: white; height: 60px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; z-index: 100; }
+        .logo-box { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .nurse-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        
+        .main-container { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        #home-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .menu-card { border-radius: 15px; padding: 20px; color: white; cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .menu-card:hover { transform: translateY(-5px); }
+        .menu-card i { font-size: 3rem; opacity: 0.8; margin-bottom: 10px; display: block; }
+        .menu-card .cartoon { position: absolute; right: -10px; bottom: -10px; font-size: 5rem; opacity: 0.2; transform: rotate(-15deg); }
+        
+        .card-ward { background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); color: #333; }
+        .card-nqa { background: linear-gradient(135deg, #84FAB0 0%, #8FD3F4 100%); color: #333; }
+        .card-kong { background: linear-gradient(135deg, #A18CD1 0%, #FBC2EB 100%); }
+        .card-ic { background: linear-gradient(135deg, #F6D365 0%, #FDA085 100%); color: #333; }
+        .card-outcome { background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); }
+
+        #detail-view { display: none; height: 100%; flex-direction: column; }
+        .filter-bar { background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .table-wrapper { flex: 1; overflow: auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        table { border-collapse: collapse; width: max-content; min-width: 100%; table-layout: auto; }
+        th { background: #E2E8F0 !important; position: sticky; top: 0; z-index: 10; padding: 8px; border: 1px solid #CBD5E1; text-align: left; font-weight: 600; white-space: nowrap; }
+        td { border: 1px solid #CBD5E1; padding: 6px; vertical-align: top; text-align: left; background: white; white-space: nowrap; }
+        
+        .empty-cell { background-color: #FFFFE0 !important; }
+        .alert-high { color: var(--danger) !important; font-weight: bold; }
+        
+        .wrap-col { min-width: 250px; max-width: 350px; white-space: pre-wrap !important; word-wrap: break-word; line-height: 1.5; }
+        
+        input[type="text"] { border: 1px solid transparent; width: 100%; min-width: 40px; font-size: 11px; padding: 2px; }
+        input[type="text"]:focus { border-bottom: 1px solid var(--accent); outline: none; background: #fff; }
+        textarea { width: 100%; min-width: 150px; min-height: 60px; font-size: 11px; padding: 4px; border: 1px solid #CBD5E1; border-radius: 4px; resize: vertical; white-space: pre-wrap; }
+        
+        /* ปรับแต่งปุ่มไฟล์ */
+        .file-actions { display: flex; flex-direction: column; gap: 6px; min-width: 100px; }
+        .btn-file { font-size: 10px; padding: 5px 8px; width: 100%; font-weight: bold; }
+        
+        #outcome-view { display: none; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; padding-bottom: 30px; }
+        .chart-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .chart-container { height: 250px; width: 100%; margin-bottom: 15px; }
+    </style>
 </head>
 <body>
 
-  <div class="card">
-    <h3>อัปโหลดเอกสาร</h3>
-    <input type="file" id="fileInput" />
-    <br>
-    <button class="btn-upload" onclick="uploadFile()" id="uploadBtn">อัปโหลดไฟล์</button>
-    
-    <!-- พื้นที่แสดงข้อความสถานะ -->
-    <div id="statusMessage"></div>
-    
-    <!-- พื้นที่แสดงปุ่มดูไฟล์ (จะปรากฏเมื่ออัปโหลดเสร็จ) -->
-    <div id="buttonContainer"></div>
-  </div>
+<div class="topbar">
+    <div class="logo-box" onclick="showHome()">
+        <img src="https://cdn-icons-png.flaticon.com/512/3209/3209074.png" class="nurse-logo" alt="Nurse Logo">
+        <h5 class="mb-0 fw-bold text-primary">NSO SATUN 2569</h5>
+    </div>
+    <div id="action-btns" class="d-none gap-2">
+        <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="showHome()"><i class="bi bi-house-door-fill"></i> หน้าหลัก</button>
+        <button class="btn btn-sm btn-primary fw-bold" onclick="saveData()"><i class="bi bi-save"></i> บันทึกข้อมูล</button>
+        <button class="btn btn-sm btn-dark" onclick="fetchData()"><i class="bi bi-arrow-repeat"></i> ดึงใหม่</button>
+        <button class="btn btn-sm btn-success" onclick="exportExcel()"><i class="bi bi-file-excel"></i> Export</button>
+        <button class="btn btn-sm btn-info text-white" onclick="captureView('detail-view')"><i class="bi bi-camera"></i> Capture</button>
+    </div>
+</div>
 
-  <script>
-    function uploadFile() {
-      const fileInput = document.getElementById('fileInput');
-      const statusMessage = document.getElementById('statusMessage');
-      const buttonContainer = document.getElementById('buttonContainer');
-      const uploadBtn = document.getElementById('uploadBtn');
+<div class="main-container">
+    <div id="home-view"></div>
 
-      // ตรวจสอบว่าเลือกไฟล์หรือยัง
-      if (fileInput.files.length === 0) {
-        alert('กรุณาเลือกไฟล์ก่อนอัปโหลด');
-        return;
-      }
+    <div id="detail-view">
+        <h5 id="sheet-title" class="fw-bold mb-3 text-primary"></h5>
+        <div class="filter-bar">
+            <strong><i class="bi bi-funnel-fill text-accent"></i> ตัวกรอง:</strong>
+            <input type="text" id="flt-kpi" class="form-control form-control-sm" style="width:200px;" placeholder="ค้นหาตัวชี้วัด..." onkeyup="applyFilter()">
+            <select id="flt-month" class="form-select form-select-sm" style="width:120px;" onchange="applyFilter()"><option value="">-- เดือน --</option></select>
+            <select id="flt-freq" class="form-select form-select-sm" style="width:120px;" onchange="applyFilter()"><option value="">-- ความถี่ --</option></select>
+        </div>
+        <div class="table-wrapper" id="capture-zone">
+            <div id="table-render"></div>
+        </div>
+    </div>
 
-      const file = fileInput.files[0];
-      
-      // แสดงสถานะกำลังโหลด
-      statusMessage.innerHTML = "<span style='color: #fd7e14;'>กำลังอัปโหลด... กรุณารอสักครู่</span>";
-      buttonContainer.innerHTML = ""; // ล้างปุ่มเดิมออก
-      uploadBtn.disabled = true; // ป้องกันการกดซ้ำ
+    <div id="outcome-view"></div>
+</div>
 
-      // อ่านไฟล์และแปลงเป็น Base64
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const base64Data = e.target.result;
-        const fileName = file.name;
+<script>
+    const API = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
+    let activeSheet = "", masterData = [], charts = [];
 
-        // เรียกใช้ฟังก์ชันฝั่ง Google Apps Script
-        google.script.run
-          .withSuccessHandler(function(response) {
-            uploadBtn.disabled = false; // เปิดให้ปุ่มกดได้อีกครั้ง
-            
-            if (response.status === "success") {
-              statusMessage.innerHTML = "<span style='color: #198754;'>อัปโหลดสำเร็จ!</span>";
-              fileInput.value = ""; // รีเซ็ตช่องเลือกไฟล์
-              
-              // สร้างปุ่มดูไฟล์
-              buttonContainer.innerHTML = `<a href="${response.url}" target="_blank" class="btn-view">👁️ ดูไฟล์ที่อัปโหลด</a>`;
-            } else {
-              statusMessage.innerHTML = "<span style='color: #dc3545;'>เกิดข้อผิดพลาด: " + response.message + "</span>";
-            }
-          })
-          .uploadFileToDrive(base64Data, fileName);
-      };
-      reader.readAsDataURL(file);
+    const OUTCOME_KPIS = [
+        "2.7 อัตราการเกิดแผลกดทับระดับ 2-4", "2.8 จำนวนอุบัติการณ์การเกิดพลัดตกหกล้มทั้งหมด", "2.9 อัตราการพลัดตกหกล้มความรุนแรงระดับ A-D", 
+        "2.10 อัตราความคลาดเคลื่อนในการบริหารยาและสารน้ำ (ระดับ C -I)", "2.11 อัตราความคลาดเคลื่อนในการบริหารยา HAD ระดับ C-I", 
+        "2.12 อัตราการเกิดปอดอักเสบที่สัมพันธ์กับการใช้เครื่องช่วยหายใจ (VAP)", "2.13 อัตราการติดเชื้อในระบบทางเดินปัสสาวะที่สัมพันธ์กับการคาสายสวนปัสสาวะ (CAUTI)", 
+        "2.14 อัตราการติดเชื้อในกระแสเลือดที่สัมพันธ์กับการใส่สายสวนหลอดเลือดดำส่วนกลาง (CLABSI)", "2.15 อัตราการเกิดหลอดเลือดดำส่วนปลายติดเชื้อจากการให้สารนำทางหลอดเลือดดำ (Phlebitis)", 
+        "2.16 อัตราการติดเชื้อ SSI", "2.17 อัตราท่อช่วยหายใจเลื่อนหลุด"
+    ];
+
+    window.onload = () => {
+        fetch(`${API}?action=getWards`).then(res => res.json()).then(wards => {
+            let html = `<div class="menu-card card-outcome" onclick="loadOutcome()"><i class="bi bi-graph-up-arrow"></i><h6 class="fw-bold">NURSING OUTCOME</h6><div class="cartoon">📈</div></div>`;
+            wards.forEach(w => {
+                html += `<div class="menu-card card-ward" onclick="loadSheet('${w}')"><i class="bi bi-hospital"></i><h6 class="fw-bold">${w}</h6><div class="cartoon">🏥</div></div>`;
+            });
+            html += `<div class="menu-card card-kong" onclick="loadSheet('กองการ_68')"><i class="bi bi-folder-fill"></i><h6 class="fw-bold">กองการ_68</h6><div class="cartoon">📁</div></div>`;
+            html += `<div class="menu-card card-ic" onclick="loadSheet('IC')"><i class="bi bi-shield-plus"></i><h6 class="fw-bold">IC Analytics</h6><div class="cartoon">🛡️</div></div>`;
+            html += `<div class="menu-card card-nqa" onclick="loadSheet('NQA')"><i class="bi bi-file-medical"></i><h6 class="fw-bold">NQA (Read-Only)</h6><div class="cartoon">📑</div></div>`;
+            document.getElementById('home-view').innerHTML = html;
+        });
+    };
+
+    function showHome() {
+        document.getElementById('home-view').style.display = 'grid';
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('outcome-view').style.display = 'none';
+        document.getElementById('action-btns').classList.add('d-none');
     }
-  </script>
 
+    function loadSheet(name) {
+        activeSheet = name;
+        document.getElementById('home-view').style.display = 'none';
+        document.getElementById('outcome-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = 'flex';
+        document.getElementById('action-btns').classList.remove('d-none');
+        document.getElementById('sheet-title').innerText = "📍 " + name;
+        fetchData();
+    }
+
+    function loadOutcome() {
+        activeSheet = "NQA"; 
+        document.getElementById('home-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('outcome-view').style.display = 'grid';
+        document.getElementById('action-btns').classList.remove('d-none');
+        
+        document.getElementById('outcome-view').innerHTML = '<h5 class="col-12 text-center mt-5">กำลังวิเคราะห์ข้อมูลกราฟ...</h5>';
+        fetch(`${API}?action=getData&sheetName=NQA`).then(res => res.json()).then(data => {
+            masterData = data;
+            let fileColIdx = masterData[0].findIndex(h => String(h).trim() === 'ไฟล์แนบ');
+            if(fileColIdx === -1) {
+                masterData[0].push('ไฟล์แนบ');
+                for(let r=1; r<masterData.length; r++) masterData[r].push('');
+            }
+            renderOutcome(masterData);
+        });
+    }
+
+    function fetchData() {
+        document.getElementById('table-render').innerHTML = '<h5 class="text-center mt-5">กำลังโหลดข้อมูล...</h5>';
+        fetch(`${API}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
+            masterData = data;
+            
+            let fileColIdx = masterData[0].findIndex(h => String(h).trim() === 'ไฟล์แนบ');
+            if(fileColIdx === -1) {
+                masterData[0].push('ไฟล์แนบ');
+                for(let r=1; r<masterData.length; r++) masterData[r].push('');
+            }
+            
+            renderTable(masterData);
+        });
+    }
+
+    function renderTable(data) {
+        if(!data.length) return;
+        const rawHead = data[0];
+        
+        const excludeWords = ['หาร', 'หมายเหตุ', 'รหัสข้อมูล', 'รหัส', 'ข้อมูล', 'ไฟล์แนบ'];
+        let colIndices = [];
+        
+        if(activeSheet === 'IC') {
+            const icTemplate = ['ตำแหน่ง','เกณฑ์','ตัวตั้งตัวหาร','63','64','65','66','67','68','ต.ค.-68','พ.ย.-68','ธ.ค.-68','มค.69','กพ','มีค','เมย','พค','มิย','กค','สค','กย','สรุป','วิเคราะห์'];
+            icTemplate.forEach(t => { 
+                const idx = rawHead.findIndex(h => String(h).trim() === t); 
+                if(idx !== -1) colIndices.push(idx); 
+            });
+        } else {
+            rawHead.forEach((h, i) => { 
+                let headerStr = h !== null && h !== undefined ? String(h).trim() : "";
+                if(!excludeWords.includes(headerStr) && headerStr !== '') colIndices.push(i); 
+            });
+        }
+
+        const targetIdx = rawHead.findIndex(h => String(h).includes('เป้าหมาย') || String(h).includes('เกณฑ์'));
+        const freqIdx = rawHead.findIndex(h => String(h).trim() === 'ความถี่');
+        const fileColIdx = rawHead.findIndex(h => String(h).trim() === 'ไฟล์แนบ');
+
+        let html = `<table><thead><tr>`;
+        colIndices.forEach(i => html += `<th>${rawHead[i]}</th>`);
+        html += `<th>จัดการไฟล์/หลักฐาน</th></tr></thead><tbody>`;
+
+        for(let r=1; r<data.length; r++) {
+            html += `<tr>`;
+            colIndices.forEach(c => {
+                let cellData = data[r][c];
+                let headerName = String(rawHead[c]).trim();
+                let isNum = typeof cellData === 'number';
+                let display = isNum ? cellData.toFixed(2) : (cellData || "");
+                
+                let emptyClass = (display === "") ? "empty-cell" : "";
+                let alertClass = (isNum && targetIdx !== -1 && cellData > parseFloat(data[r][targetIdx] || 9999)) ? "alert-high" : "";
+                
+                let isReadOnly = (activeSheet === 'NQA' && headerName !== 'วิเคราะห์');
+                let wrapClass = (headerName.includes('ตัวชี้วัด') || headerName.includes('ข้อมูล') || headerName === 'วิเคราะห์') ? "wrap-col" : "";
+
+                if(headerName === 'วิเคราะห์') {
+                    html += `<td><textarea class="${wrapClass}" onchange="updateM(${r},${c},this.value)">${display}</textarea></td>`;
+                } else {
+                    html += `<td class="${wrapClass} ${emptyClass}">${isReadOnly ? `<span class="${alertClass}">${display}</span>` : `<input type="text" class="${alertClass}" value="${display}" onchange="updateM(${r},${c},this.value)">`}</td>`;
+                }
+            });
+            
+            // สร้างปุ่มดูไฟล์ (สีฟ้า) และปุ่มอัปโหลด
+            let fileLink = String(data[r][fileColIdx] || "").match(/https?:\/\/[^\s]+/);
+            let btnOpen = fileLink 
+                ? `<button class="btn btn-primary btn-file mb-1" onclick="window.open('${fileLink[0]}', '_blank')"><i class="bi bi-eye-fill"></i> ดูไฟล์แนบ</button>` 
+                : `<button class="btn btn-secondary btn-file mb-1" disabled><i class="bi bi-eye-slash"></i> ไม่มีไฟล์</button>`;
+            
+            html += `<td class="text-center">
+                        <div class="file-actions">
+                            ${btnOpen}
+                            <label class="btn btn-outline-dark btn-file mb-0 cursor-pointer">
+                                <i class="bi bi-cloud-upload"></i> แก้ไข/อัพโหลดไฟล์ <input type="file" hidden onchange="doUpload(this, ${r}, ${fileColIdx})">
+                            </label>
+                        </div>
+                     </td></tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById('table-render').innerHTML = html;
+        
+        const fM = document.getElementById('flt-month'); fM.innerHTML = '<option value="">-- เดือน --</option>';
+        rawHead.forEach((h,i) => { let hStr = String(h); if(hStr.includes('ตค') || hStr.includes('มค') || hStr.includes('-68')) fM.add(new Option(hStr, i)); });
+        
+        const fF = document.getElementById('flt-freq'); fF.innerHTML = '<option value="">-- ความถี่ --</option>';
+        if(freqIdx !== -1) [...new Set(data.slice(1).map(x => x[freqIdx]))].filter(String).forEach(v => fF.add(new Option(v, v)));
+    }
+
+    function updateM(r, c, v) { masterData[r][c] = v; }
+
+    function applyFilter() {
+        const qKpi = document.getElementById('flt-kpi').value.toLowerCase();
+        const qFreq = document.getElementById('flt-freq').value;
+        document.querySelectorAll("tbody tr").forEach(tr => {
+            const txt = tr.innerText.toLowerCase();
+            tr.style.display = (txt.includes(qKpi) && (qFreq === "" || txt.includes(qFreq.toLowerCase()))) ? "" : "none";
+        });
+    }
+
+    function saveData() {
+        fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: masterData }) })
+        .then(() => alert("✅ ข้อมูลถูกส่งไปบันทึกแล้ว"));
+    }
+
+    async function doUpload(input, rIdx, fileColIdx) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            document.body.style.cursor = 'wait'; 
+            const res = await fetch(API, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
+            const url = await res.text();
+            
+            document.body.style.cursor = 'default';
+            if(url.includes("Error")) {
+                alert(url);
+            } else {
+                masterData[rIdx][fileColIdx] = url;
+                alert("📁 อัพโหลดไฟล์สำเร็จแล้ว ลิงก์ถูกเพิ่มลงในระบบ (กรุณากดบันทึกข้อมูลด้านบนด้วยครับ)");
+                if(activeSheet !== 'NQA') fetchData(); 
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function renderOutcome(data) {
+        const head = data[0];
+        const nameIdx = head.findIndex(h => String(h).trim() === 'รายการตัวชี้วัด');
+        const targetIdx = head.findIndex(h => String(h).includes('เป้าหมาย'));
+        const anaIdx = head.findIndex(h => String(h).trim() === 'วิเคราะห์');
+        const fileColIdx = head.findIndex(h => String(h).trim() === 'ไฟล์แนบ');
+        const c66 = head.findIndex(h => String(h).trim() === '66');
+        const c67 = head.findIndex(h => String(h).trim() === '67');
+        const c68 = head.findIndex(h => String(h).trim() === '68');
+        const c69 = head.findIndex(h => String(h).trim() === '2569');
+        
+        document.getElementById('outcome-view').innerHTML = "";
+        charts.forEach(c => c.destroy()); charts = [];
+
+        OUTCOME_KPIS.forEach((kpiName, index) => {
+            let rowIdx = data.findIndex((r, i) => i > 0 && r[nameIdx] && String(r[nameIdx]).includes(kpiName.split(" ")[0]));
+            if(rowIdx === -1) return;
+            let row = data[rowIdx];
+            
+            let fileLink = String(row[fileColIdx] || "").match(/https?:\/\/[^\s]+/);
+            let btnOpen = fileLink 
+                ? `<button class="btn btn-sm btn-primary" onclick="window.open('${fileLink[0]}', '_blank')"><i class="bi bi-eye-fill"></i> ดูไฟล์แนบ</button>` 
+                : `<button class="btn btn-sm btn-secondary" disabled><i class="bi bi-eye-slash"></i> ไม่มีไฟล์</button>`;
+
+            let html = `
+            <div class="chart-card" id="card-out-${index}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="fw-bold text-primary wrap-col" style="min-width:auto;">${kpiName}</h6>
+                    <button class="btn btn-sm btn-info text-white" onclick="captureView('card-out-${index}')"><i class="bi bi-camera"></i> Capture</button>
+                </div>
+                <div class="chart-container"><canvas id="cv-${index}"></canvas></div>
+                <textarea class="mt-2" placeholder="เพิ่มบทวิเคราะห์กราฟนี้..." onchange="updateM(${rowIdx}, ${anaIdx}, this.value)">${row[anaIdx]||""}</textarea>
+                <div class="d-flex gap-2 mt-2 align-items-center justify-content-between">
+                    <div class="d-flex gap-2">
+                        ${btnOpen}
+                        <label class="btn btn-sm btn-outline-dark mb-0"><i class="bi bi-cloud-upload"></i> อัพโหลดไฟล์<input type="file" hidden onchange="doUpload(this, ${rowIdx}, ${fileColIdx})"></label>
+                    </div>
+                </div>
+            </div>`;
+            document.getElementById('outcome-view').innerHTML += html;
+            
+            setTimeout(() => {
+                let ctx = document.getElementById(`cv-${index}`).getContext('2d');
+                let target = parseFloat(row[targetIdx]) || 0;
+                let vals = [parseFloat(row[c66])||0, parseFloat(row[c67])||0, parseFloat(row[c68])||0, parseFloat(row[c69])||0];
+                charts.push(new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['ปี 66', 'ปี 67', 'ปี 68', 'ปี 69'],
+                        datasets: [
+                            { label: 'ผลลัพธ์', data: vals, borderColor: '#667EEA', fill: true, backgroundColor: 'rgba(102, 126, 234, 0.1)', tension: 0.3 },
+                            { label: 'เป้าหมาย', data: [target, target, target, target], borderColor: '#E74C3C', borderDash: [5,5], pointRadius: 0 }
+                        ]
+                    },
+                    options: { maintainAspectRatio: false }
+                }));
+            }, 100);
+        });
+    }
+
+    function captureView(id) { html2canvas(document.getElementById(id)).then(c => { let a = document.createElement('a'); a.download = 'Capture.png'; a.href = c.toDataURL(); a.click(); }); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.querySelector('table')), `${activeSheet}.xlsx`); }
+</script>
 </body>
 </html>
