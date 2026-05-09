@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>NSO SATUN KPI 2569 - Wrap Text</title>
+    <title>NSO SATUN KPI 2569 - Final Solution</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -12,21 +12,26 @@
     <style>
         :root { --primary: #1e1e2d; --accent: #00A3AD; --danger: #ff4d4d; }
         body { font-family: 'Noto Sans Thai', sans-serif; background: #f4f6f9; display: flex; height: 100vh; margin: 0; font-size: 11px; overflow: hidden; }
-        .sidebar { width: 230px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .nav-btn { padding: 10px 18px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; }
-        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent); }
-        .top-nav { height: 50px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-        .content-body { flex: 1; padding: 12px; overflow-y: auto; }
-        .table-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 10px; max-height: 78vh; overflow: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; padding: 6px; font-weight: 600; text-align: center; border: 1px solid #eef2f7; font-size: 11px; }
-        td { border: 1px solid #eef2f7; padding: 4px; vertical-align: middle; background: white !important; font-size: 11px; }
         
-        /* จุดสำคัญ: การตัดข้อความในคอลัมน์ตัวชี้วัด */
-        .wrap-column { 
+        /* แก้ไข Sidebar ให้ Scroll ได้ */
+        .sidebar { width: 230px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; }
+        .sidebar-menu { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #34495e transparent; }
+        .nav-btn { padding: 10px 18px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; font-size: 11px; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent); }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-nav { height: 50px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+        .content-body { flex: 1; padding: 10px; overflow-y: auto; }
+        
+        .table-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 8px; max-height: 80vh; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; table-layout: auto; }
+        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; padding: 6px; font-weight: 600; text-align: center; border: 1px solid #eef2f7; }
+        td { border: 1px solid #eef2f7; padding: 4px; vertical-align: middle; background: white !important; }
+        
+        /* แก้ไขการ Wrap ข้อความในตาราง */
+        .kpi-name-column { 
             min-width: 180px; 
-            max-width: 250px; 
+            max-width: 280px; 
             white-space: normal !important; 
             word-wrap: break-word; 
             text-align: left !important;
@@ -46,10 +51,12 @@
     <div class="p-3 text-center border-bottom border-secondary">
         <h6 class="fw-bold mb-0">NSO SATUN 2569</h6>
     </div>
-    <div id="ward-nav"></div>
-    <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>
-    <a class="nav-btn" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC Analytics</a>
-    <a class="nav-btn" onclick="loadTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>
+    <div class="sidebar-menu">
+        <div id="ward-nav-list"></div>
+        <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>
+        <a class="nav-btn" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC Analytics</a>
+        <a class="nav-btn" onclick="loadTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>
+    </div>
 </nav>
 
 <main class="main-content">
@@ -65,10 +72,10 @@
 
     <div class="content-body" id="capture-zone">
         <div class="d-flex gap-2 mb-2">
-            <input type="text" id="kpi-filter" class="form-control form-control-sm" style="max-width:220px" placeholder="🔍 ค้นหาตัวชี้วัด..." onkeyup="filterRows()">
+            <input type="text" id="kpi-search" class="form-control form-control-sm" style="max-width:220px" placeholder="🔍 ค้นหาตัวชี้วัด..." onkeyup="filterRows()">
         </div>
         <div id="table-container" class="table-card overflow-auto">
-            <p class="text-center py-5 text-muted">เลือกเมนูเพื่อดึงข้อมูล</p>
+            <p class="text-center py-5 text-muted">พร้อมใช้งาน เลือกเมนูเพื่อดึงข้อมูล</p>
         </div>
         <div id="ic-chart-area" class="d-none">
             <div class="chart-box"><canvas id="icLine"></canvas></div>
@@ -78,11 +85,11 @@
 
 <script>
     const API_URI = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
-    let activeSheet = "", currentData = [], chartInstance = null;
+    let activeSheet = "", cachedData = [], chartInstance = null;
 
     window.onload = () => {
         fetch(`${API_URI}?action=getWards`).then(res => res.json()).then(wards => {
-            document.getElementById('ward-nav').innerHTML = wards.map(w => 
+            document.getElementById('ward-nav-list').innerHTML = wards.map(w => 
                 `<a class="nav-btn" onclick="loadTab('${w}')"><i class="bi bi-hospital"></i> ${w}</a>`
             ).join('');
         });
@@ -100,7 +107,7 @@
         const container = document.getElementById('table-container');
         container.innerHTML = '<div class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> กำลังดึงข้อมูล...</div>';
         fetch(`${API_URI}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
-            currentData = data;
+            cachedData = data;
             renderTable(data);
             if(activeSheet === 'IC') renderIC(data);
         });
@@ -109,7 +116,7 @@
     function renderTable(data) {
         if(!data || data.length === 0) return;
         const head = data[0];
-        let html = `<table id="kpi-table"><thead><tr>`;
+        let html = `<table id="main-table"><thead><tr>`;
         head.forEach(h => html += `<th>${h}</th>`);
         html += `<th>แนบไฟล์</th></tr></thead><tbody>`;
 
@@ -120,27 +127,27 @@
             html += `<tr>`;
             data[i].forEach((cell, idx) => {
                 let targetVal = parseFloat(data[i][targetIdx]) || 0;
-                let numVal = parseFloat(cell);
-                let isAlert = (!isNaN(numVal) && numVal > targetVal) ? "high-alert" : "";
+                let currentVal = parseFloat(cell);
+                let alertClass = (!isNaN(currentVal) && currentVal > targetVal) ? "high-alert" : "";
                 let isReadOnly = (activeSheet === 'NQA' && head[idx] !== 'วิเคราะห์');
                 let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
                 
-                // กำหนดคลาสพิเศษสำหรับคอลัมน์รายการตัวชี้วัดเพื่อทำการ Wrap Text
-                let specialClass = (idx === kpiIdx) ? "wrap-column" : "";
+                // คอลัมน์รายการตัวชี้วัดให้ตัดคำบรรทัดล่าง
+                let cellClass = (idx === kpiIdx) ? "kpi-name-column" : "";
 
                 if(head[idx] === 'วิเคราะห์') {
-                    html += `<td><textarea onchange="updateData(${i},${idx},this.value)">${display}</textarea></td>`;
+                    html += `<td><textarea onchange="updateCache(${i},${idx},this.value)">${display}</textarea></td>`;
                 } else {
-                    html += `<td class="${specialClass}">${isReadOnly ? `<span>${display}</span>` : `<input type="text" class="${isAlert}" value="${display}" onchange="updateData(${i},${idx},this.value)">`}</td>`;
+                    html += `<td class="${cellClass}">${isReadOnly ? `<span>${display}</span>` : `<input type="text" class="${alertClass}" value="${display}" onchange="updateCache(${i},${idx},this.value)">`}</td>`;
                 }
             });
-            html += `<td class="text-center"><input type="file" style="font-size:9px" onchange="uploadFile(this, ${i})"></td></tr>`;
+            html += `<td class="text-center"><input type="file" style="font-size:9px" onchange="doUpload(this, ${i})"></td></tr>`;
         }
         html += `</tbody></table>`;
         document.getElementById('table-container').innerHTML = html;
     }
 
-    function updateData(r, c, v) { currentData[r][c] = v; }
+    function updateCache(r, c, v) { cachedData[r][c] = v; }
 
     function renderIC(data) {
         document.getElementById('ic-chart-area').classList.remove('d-none');
@@ -164,32 +171,32 @@
     }
 
     function filterRows() {
-        const q = document.getElementById('kpi-filter').value.toLowerCase();
-        const rows = document.querySelectorAll("#kpi-table tbody tr");
+        const q = document.getElementById('kpi-search').value.toLowerCase();
+        const rows = document.querySelectorAll("#main-table tbody tr");
         rows.forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none");
     }
 
     function saveData() {
-        const body = currentData.slice(1);
+        const body = cachedData.slice(1);
         fetch(API_URI, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: body }) })
         .then(() => alert("✅ ส่งคำสั่งบันทึกสำเร็จ"));
     }
 
-    async function uploadFile(input, rIdx) {
+    async function doUpload(input, rIdx) {
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = async (e) => {
             const res = await fetch(API_URI, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
             const url = await res.text();
-            const anaIdx = currentData[0].indexOf('วิเคราะห์');
-            currentData[rIdx][anaIdx] += `\n📎 ไฟล์: ${url}`;
+            const anaIdx = cachedData[0].indexOf('วิเคราะห์');
+            cachedData[rIdx][anaIdx] += `\n📎 ไฟล์: ${url}`;
             alert("📁 อัปโหลดและบันทึก Link แล้ว");
             fetchData();
         };
         reader.readAsDataURL(file);
     }
 
-    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('kpi-table')), `${activeSheet}_Data.xlsx`); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('main-table')), `${activeSheet}_Data.xlsx`); }
     function doCapture() { html2canvas(document.getElementById('capture-zone')).then(cv => { let a = document.createElement('a'); a.download = 'Capture.png'; a.href = cv.toDataURL(); a.click(); }); }
 </script>
 </body>
