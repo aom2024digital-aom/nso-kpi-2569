@@ -2,159 +2,173 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>NSO SATUN 2569</title>
+    <title>NSO SATUN KPI 2569</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #1a1a2e; --accent: #00d2d3; }
-        body { font-family: 'Noto Sans Thai', sans-serif; background: #f0f2f5; height: 100vh; margin: 0; font-size: 10px; overflow: hidden; display: flex; }
-        .login-overlay { position: fixed; inset: 0; background: var(--primary); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        :root { --primary: #1e1e2d; --accent: #00A3AD; }
+        body { font-family: 'Noto Sans Thai', sans-serif; background: #f4f6f9; display: flex; height: 100vh; margin: 0; font-size: 10px; overflow: hidden; }
+        
         .sidebar { width: 200px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-menu { flex: 1; overflow-y: auto; }
-        .nav-btn { padding: 8px 15px; color: #adb5bd; cursor: pointer; border-bottom: 1px solid #2d2d44; display: block; text-decoration: none; }
-        .nav-btn:hover, .nav-btn.active { background: #2d2d44; color: white; border-left: 3px solid var(--accent); }
-        .main-app { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-nav { height: 45px; background: white; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
-        .content-area { flex: 1; padding: 10px; overflow-y: auto; }
-        .table-wrap { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 5px; max-height: 85vh; overflow: auto; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid #eee; padding: 4px; vertical-align: top; text-align: left; }
-        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; text-align: center; font-weight: 600; }
+        .nav-btn { padding: 8px 15px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; font-size: 10px; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent); }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-nav { height: 45px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
+        .content-body { flex: 1; padding: 8px; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* แก้ไขปัญหาข้อความยาวด้วย scrolling ในเซลล์ */
-        .scroll-cell { max-height: 50px; overflow-y: auto; white-space: normal; word-break: break-word; line-height: 1.2; }
+        /* Table Scroll UI */
+        .table-scroll { background: white; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: auto; flex: 1; }
+        table { width: max-content; min-width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; padding: 6px; border: 1px solid #eef2f7; text-align: center; }
+        td { border: 1px solid #eef2f7; padding: 4px; vertical-align: top !important; text-align: left !important; background: white !important; font-size: 10px; }
         
-        .high-alert { color: #ff4d4d !important; font-weight: bold; }
-        input[type="text"] { width: 100%; border: none; background: transparent; font-size: 10px; }
-        textarea { width: 100%; height: 50px; font-size: 9px; border: 1px solid #eee; }
-        .action-btns { display: flex; gap: 2px; }
+        .col-kpi { min-width: 250px; white-space: normal; }
+        input { border: none; background: transparent; width: 100%; font-size: 10px; }
+        textarea { width: 100%; min-height: 45px; border: 1px solid #eee; font-size: 9px; padding: 2px; }
+
+        /* Modal Security */
+        .modal-auth { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; display: none; align-items: center; justify-content: center; }
+        .auth-card { background: white; padding: 25px; border-radius: 10px; width: 300px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="login-screen" class="login-overlay">
-    <div class="bg-white p-4 rounded shadow text-center" style="width: 300px;">
-        <h5 class="mb-3">เข้าสู่ระบบ NSO SATUN</h5>
-        <input type="text" id="log-user" class="form-control mb-2" placeholder="Username (WARD 1, ER...)">
-        <input type="password" id="log-pass" class="form-control mb-3" placeholder="Password">
-        <button class="btn btn-primary w-100" onclick="handleLogin()">Login</button>
+<!-- Login Modal for Saving -->
+<div id="auth-modal" class="modal-auth">
+    <div class="auth-card shadow">
+        <h6 class="fw-bold mb-3">กรุณายืนยันตัวตนก่อนบันทึก</h6>
+        <input type="text" id="u-auth" class="form-control form-control-sm mb-2 text-center" placeholder="Username">
+        <input type="password" id="p-auth" class="form-control form-control-sm mb-3 text-center" placeholder="Password">
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-secondary w-100" onclick="closeAuth()">ยกเลิก</button>
+            <button class="btn btn-sm btn-primary w-100" onclick="confirmSave()">ตกลง</button>
+        </div>
     </div>
 </div>
 
 <nav class="sidebar">
-    <div class="p-3 text-center border-bottom border-secondary"><h6>NSO SATUN</h6></div>
-    <div class="sidebar-menu" id="ward-nav"></div>
-    <a class="nav-btn" onclick="loadTab('กองการ_68')">กองการ_68</a>
-    <a class="nav-btn" onclick="loadTab('IC')">IC Analytics</a>
-    <a class="nav-btn" onclick="loadTab('NQA')">NQA (Read-Only)</a>
+    <div class="p-3 text-center border-bottom border-secondary"><h6>KPI SATUN 2569</h6></div>
+    <div class="sidebar-menu" id="nav-list"></div>
 </nav>
 
-<main class="main-app">
+<main class="main-content">
     <div class="top-nav">
-        <span id="title-text" class="fw-bold text-primary">KPI 2569</span>
+        <span id="header-text" class="fw-bold text-primary">กรุณาเลือกเมนู</span>
         <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-primary" onclick="saveData()">บันทึก</button>
-            <button class="btn btn-sm btn-dark" onclick="fetchData()">ดึงข้อมูล</button>
-            <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()">Export</button>
+            <button class="btn btn-sm btn-primary py-1 px-3" onclick="openAuth()">บันทึกข้อมูล</button>
+            <button class="btn btn-sm btn-dark py-1 px-3" onclick="fetchData()">ดึงข้อมูล</button>
+            <button class="btn btn-sm btn-outline-success py-1 px-3" onclick="exportExcel()">Export</button>
         </div>
     </div>
-    <div class="content-area">
-        <div id="table-view" class="table-wrap"></div>
+    <div class="content-body">
+        <div class="table-scroll">
+            <div id="table-area"><p class="text-center py-5">เลือกชีทงานเพื่อดูข้อมูล...</p></div>
+        </div>
     </div>
 </main>
 
 <script>
-    const API = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
-    let currentSheet = "", master = [];
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
+    let activeSheet = "", cachedData = [];
 
-    function handleLogin() {
-        const user = document.getElementById('log-user').value;
-        const pass = document.getElementById('log-pass').value;
-        fetch(API, { method: "POST", body: JSON.stringify({ action: 'login', user, pass }) })
-        .then(r => r.json()).then(res => {
-            if(res.success) {
-                document.getElementById('login-screen').style.display = 'none';
-                initMenu();
-            } else alert(res.msg);
+    window.onload = () => {
+        fetch(`${API_URL}?action=getWards`).then(res => res.json()).then(wards => {
+            let html = wards.map(w => `<a class="nav-btn" onclick="loadTab('${w}')"><i class="bi bi-hospital"></i> ${w}</a>`).join('');
+            html += `<a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>`;
+            html += `<a class="nav-btn" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC Analytics</a>`;
+            html += `<a class="nav-btn" onclick="loadTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>`;
+            document.getElementById('nav-list').innerHTML = html;
         });
-    }
-
-    function initMenu() {
-        fetch(`${API}?action=getWards`).then(r => r.json()).then(data => {
-            document.getElementById('ward-nav').innerHTML = data.map(w => `<a class="nav-btn" onclick="loadTab('${w}')">${w}</a>`).join('');
-        });
-    }
+    };
 
     function loadTab(name) {
-        currentSheet = name;
-        document.getElementById('title-text').innerText = name;
+        activeSheet = name;
+        document.getElementById('header-text').innerText = "📍 " + name;
         fetchData();
     }
 
     function fetchData() {
-        document.getElementById('table-view').innerHTML = '<p class="text-center p-5">Loading...</p>';
-        fetch(`${API}?action=getData&sheetName=${currentSheet}`).then(r => r.json()).then(data => {
-            master = data;
-            render(data);
+        document.getElementById('table-area').innerHTML = '<p class="text-center py-5">กำลังดึงข้อมูล...</p>';
+        fetch(`${API_URL}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
+            cachedData = data;
+            renderTable(data);
         });
     }
 
-    function render(data) {
+    function renderTable(data) {
         if(!data.length) return;
         const head = data[0];
         let html = `<table><thead><tr>`;
         head.forEach(h => html += `<th>${h}</th>`);
         html += `<th>จัดการไฟล์</th></tr></thead><tbody>`;
 
-        const targetIdx = head.indexOf('เป้าหมาย');
+        const nameIdx = head.indexOf('รายการตัวชี้วัด');
+        const anaIdx = head.indexOf('วิเคราะห์');
 
-        for(let i=1; i<data.length; i++) {
+        for(let i=1; i<data.length; i++){
             html += `<tr>`;
             data[i].forEach((cell, idx) => {
-                let target = parseFloat(data[i][targetIdx]) || 999;
-                let val = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
-                let alert = (typeof cell === 'number' && cell > target) ? "high-alert" : "";
-                
-                if(head[idx] === 'วิเคราะห์') {
-                    html += `<td><textarea onchange="upd(${i},${idx},this.value)">${val}</textarea></td>`;
+                let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+                let isReadOnly = (activeSheet === 'NQA' && idx !== anaIdx);
+                let colClass = (idx === nameIdx) ? "col-kpi" : "";
+
+                if(idx === anaIdx) {
+                    html += `<td><textarea onchange="updateData(${i},${idx},this.value)">${display}</textarea></td>`;
                 } else {
-                    html += `<td><div class="scroll-cell ${alert}">${val.length > 20 ? `<div class="scroll-cell">${val}</div>` : `<input type="text" value="${val}" onchange="upd(${i},${idx},this.value)">`}</div></td>`;
+                    html += `<td class="${colClass}">${isReadOnly ? `<span>${display}</span>` : `<input type="text" value="${display}" onchange="updateData(${i},${idx},this.value)">`}</td>`;
                 }
             });
-            const fileLink = master[i][head.indexOf('วิเคราะห์')].match(/https:\/\/drive\.google\.com[^\s]*/);
-            html += `<td><div class="action-btns">
-                <input type="file" style="display:none" id="f-${i}" onchange="doUp(${i})">
-                <button class="btn btn-xs btn-primary p-0" onclick="document.getElementById('f-${i}').click()">คัดเลือก</button>
-                ${fileLink ? `<button class="btn btn-xs btn-info p-0" onclick="window.open('${fileLink[0]}')">ดู</button>` : ''}
-            </div></td></tr>`;
+            let cur = data[i][anaIdx] || "";
+            let btn = cur.includes("http") ? `<button class="btn btn-dark btn-sm p-0 px-2 mb-1" style="font-size:8px" onclick="window.open('${extractLink(cur)}')">เปิดไฟล์</button>` : "";
+            html += `<td class="text-center">${btn}<input type="file" style="font-size:8px" onchange="doUpload(this, ${i})"></td></tr>`;
         }
-        document.getElementById('table-view').innerHTML = html + `</tbody></table>`;
+        html += `</tbody></table>`;
+        document.getElementById('table-area').innerHTML = html;
     }
 
-    function upd(r, c, v) { master[r][c] = v; }
+    function extractLink(t) { const m = t.match(/https?:\/\/[^\s]+/); return m ? m[0] : "#"; }
+    function updateData(r, c, v) { cachedData[r][c] = v; }
+    function openAuth() { document.getElementById('auth-modal').style.display = 'flex'; }
+    function closeAuth() { document.getElementById('auth-modal').style.display = 'none'; }
 
-    function saveData() {
-        fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: currentSheet, data: master.slice(1) }) })
-        .then(() => alert("ส่งข้อมูลบันทึกแล้ว"));
+    function confirmSave() {
+        const u = document.getElementById('u-auth').value;
+        const p = document.getElementById('p-auth').value;
+        if(!u || !p) return alert("กรุณากรอกข้อมูลให้ครบ");
+
+        fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: 'save', user: u, pass: p, sheetName: activeSheet, data: cachedData.slice(1) })
+        }).then(() => {
+            alert("✅ ส่งคำสั่งบันทึกแล้ว กรุณาตรวจสอบผลใน 5 วินาที");
+            closeAuth();
+        });
     }
 
-    function doUp(idx) {
-        const file = document.getElementById(`f-${idx}`).files[0];
+    async function doUpload(input, rIdx) {
+        const u = prompt("กรุณายืนยัน Username เพื่ออัปโหลดไฟล์:");
+        const p = prompt("กรุณายืนยัน Password:");
+        if(!u || !p) return;
+
+        const file = input.files[0];
         const reader = new FileReader();
-        reader.onload = (e) => {
-            fetch(API, { method: "POST", body: JSON.stringify({ action: 'upload', file: e.target.result, name: file.name }) })
-            .then(r => r.text()).then(url => {
-                master[idx][master[0].indexOf('วิเคราะห์')] += ` \nLink: ${url}`;
-                alert("อัปโหลดสำเร็จ");
-                fetchData();
-            });
+        reader.onload = async (e) => {
+            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: 'uploadFile', user: u, pass: p, file: e.target.result, name: file.name }) });
+            const url = await res.text();
+            if(url.startsWith("Error")) return alert(url);
+            const anaIdx = cachedData[0].indexOf('วิเคราะห์');
+            cachedData[rIdx][anaIdx] += ` \n📎 ไฟล์: ${url}`;
+            alert("📁 อัปโหลดสำเร็จ");
+            fetchData();
         };
         reader.readAsDataURL(file);
     }
 
-    function exportToExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('table-view')), `${currentSheet}.xlsx`); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.querySelector('table')), `${activeSheet}.xlsx`); }
 </script>
 </body>
 </html>
