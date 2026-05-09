@@ -3,93 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <title>NSO SATUN KPI 2569</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #1e1e2d; --accent: #00A3AD; --danger: #ff4d4d; }
-        body { font-family: 'Noto Sans Thai', sans-serif; background: #f4f6f9; display: flex; height: 100vh; margin: 0; font-size: 10px; overflow: hidden; }
-        
-        .sidebar { width: 210px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-menu { flex: 1; overflow-y: auto; scrollbar-width: thin; }
-        .nav-btn { padding: 8px 15px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; font-size: 10px; }
-        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent); }
-
+        :root { --primary: #1a2a3a; --accent: #00A3AD; }
+        body { font-family: 'Noto Sans Thai', 'Sarabun', sans-serif; background: #f0f2f5; display: flex; height: 100vh; margin: 0; font-size: 10px; overflow: hidden; }
+        .sidebar { width: 200px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-menu { flex: 1; overflow-y: auto; }
+        .nav-btn { padding: 8px 15px; color: #a0b0c0; cursor: pointer; border-bottom: 1px solid #2c3e50; text-decoration: none; display: block; }
+        .nav-btn:hover, .nav-btn.active { background: #2c3e50; color: white; border-left: 4px solid var(--accent); }
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .top-nav { height: 45px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
-        .content-body { flex: 1; padding: 8px; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* Table Scrolling UI */
-        .table-scroll-view { background: white; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: auto; flex: 1; }
+        .content-body { flex: 1; padding: 10px; display: flex; flex-direction: column; overflow: hidden; }
+        .table-scroll { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: auto; flex: 1; }
         table { width: max-content; min-width: 100%; border-collapse: collapse; }
-        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; padding: 6px; border: 1px solid #eef2f7; text-align: center !important; }
-        td { border: 1px solid #eef2f7; padding: 4px; vertical-align: top !important; text-align: left !important; background: white !important; font-size: 10px; }
-        
+        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; padding: 6px; border: 1px solid #eef2f7; text-align: center; font-weight: 600; }
+        td { border: 1px solid #eef2f7; padding: 4px; vertical-align: top !important; text-align: left !important; background: white !important; }
         .col-kpi { min-width: 250px; white-space: normal; line-height: 1.4; }
         input { border: none; background: transparent; width: 100%; font-size: 10px; text-align: left; }
-        textarea { width: 100%; min-height: 45px; border: 1px solid #eee; font-size: 9px; padding: 2px; }
-        .alert-val { color: var(--danger) !important; font-weight: bold; }
+        textarea { width: 100%; min-height: 50px; border: 1px solid #eee; font-size: 9px; padding: 3px; }
+        .alert-high { color: #ff4d4d !important; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <nav class="sidebar">
-    <div class="p-3 text-center border-bottom border-secondary"><h6>KPI SATUN 2569</h6></div>
+    <div class="p-3 text-center border-bottom"><h6>KPI SATUN 2569</h6></div>
     <div class="sidebar-menu" id="nav-container"></div>
 </nav>
 
 <main class="main-content">
     <div class="top-nav">
-        <span id="sheet-title" class="fw-bold text-primary">กรุณาเลือกเมนู</span>
+        <span id="title-text" class="fw-bold text-primary">กรุณาเลือกเมนู</span>
         <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-primary py-1 px-3" onclick="saveToSheet()">บันทึกข้อมูล</button>
-            <button class="btn btn-sm btn-dark py-1 px-3" onclick="fetchSheetData()">ดึงข้อมูล</button>
-            <button class="btn btn-sm btn-outline-success py-1 px-3" onclick="exportFile()">Export Excel</button>
+            <button class="btn btn-sm btn-primary px-3" onclick="saveData()">บันทึก</button>
+            <button class="btn btn-sm btn-dark px-3" onclick="refreshData()">ดึงข้อมูล</button>
+            <button class="btn btn-sm btn-outline-success px-3" onclick="exportData()">Export</button>
         </div>
     </div>
     <div class="content-body">
-        <div class="table-scroll-view">
-            <div id="table-display"><p class="text-center py-5 text-muted">พร้อมใช้งาน กรุณาเลือกชีทงานจากเมนูทางซ้ายมือ</p></div>
+        <div class="table-scroll">
+            <div id="table-output"><p class="text-center py-5 text-muted">พร้อมใช้งาน กรุณาเลือกเมนูทางด้านซ้าย</p></div>
         </div>
     </div>
 </main>
 
 <script>
-    const API_URI = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
-    let currentSheet = "", localData = [];
+    const API = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
+    let activeSheet = "", cached = [];
 
     window.onload = () => {
-        fetch(`${API_URI}?action=getWards`).then(res => res.json()).then(wards => {
-            let html = wards.map(w => `<a class="nav-btn" onclick="selectTab('${w}')"><i class="bi bi-hospital"></i> ${w}</a>`).join('');
-            html += `<a class="nav-btn" onclick="selectTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>`;
-            html += `<a class="nav-btn" onclick="selectTab('IC')"><i class="bi bi-activity"></i> IC Analytics</a>`;
-            html += `<a class="nav-btn" onclick="selectTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>`;
+        fetch(`${API}?action=getWards`).then(res => res.json()).then(wards => {
+            let html = wards.map(w => `<a class="nav-btn" onclick="openTab('${w}')"><i class="bi bi-hospital"></i> ${w}</a>`).join('');
+            html += `<a class="nav-btn" onclick="openTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>`;
+            html += `<a class="nav-btn" onclick="openTab('IC')"><i class="bi bi-activity"></i> IC Analytics</a>`;
+            html += `<a class="nav-btn" onclick="openTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>`;
             document.getElementById('nav-container').innerHTML = html;
         });
     };
 
-    function selectTab(name) {
-        currentSheet = name;
-        document.getElementById('sheet-title').innerText = "📍 ชีท: " + name;
-        fetchSheetData();
+    function openTab(name) {
+        activeSheet = name;
+        document.getElementById('title-text').innerText = "📍 ชีท: " + name;
+        refreshData();
     }
 
-    function fetchSheetData() {
-        const display = document.getElementById('table-display');
-        display.innerHTML = '<p class="text-center py-5">กำลังดึงข้อมูล...</p>';
-        fetch(`${API_URI}?action=getData&sheetName=${currentSheet}`).then(res => res.json()).then(data => {
-            localData = data;
-            drawTable(data);
+    function refreshData() {
+        document.getElementById('table-output').innerHTML = '<p class="text-center py-5">กำลังดึงข้อมูล...</p>';
+        fetch(`${API}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
+            cached = data;
+            render(data);
         });
     }
 
-    function drawTable(data) {
+    function render(data) {
         if(!data || data.length === 0) return;
         const head = data[0];
         let html = `<table><thead><tr>`;
         head.forEach(h => html += `<th>${h}</th>`);
-        html += `<th>ไฟล์แนบ</th></tr></thead><tbody>`;
+        html += `<th>แนบไฟล์</th></tr></thead><tbody>`;
 
         const kpiIdx = head.indexOf('รายการตัวชี้วัด');
         const targetIdx = head.indexOf('เป้าหมาย');
@@ -100,50 +94,45 @@
             data[i].forEach((cell, idx) => {
                 let targetVal = parseFloat(data[i][targetIdx]) || 9999;
                 let curVal = parseFloat(cell);
-                let alertCss = (!isNaN(curVal) && curVal > targetVal) ? "alert-val" : "";
-                let isNQA_ReadOnly = (currentSheet === 'NQA' && head[idx] !== 'วิเคราะห์');
-                let displayVal = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+                let alertCss = (!isNaN(curVal) && curVal > targetVal) ? "alert-high" : "";
+                let isNQA = (activeSheet === 'NQA' && head[idx] !== 'วิเคราะห์');
+                let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+                let tdClass = (idx === kpiIdx) ? "col-kpi" : "";
 
                 if(head[idx] === 'วิเคราะห์') {
-                    html += `<td><textarea onchange="updateCell(${i},${idx},this.value)">${displayVal}</textarea></td>`;
+                    html += `<td><textarea onchange="update(${i},${idx},this.value)">${display}</textarea></td>`;
                 } else {
-                    let tdClass = (idx === kpiIdx) ? "col-kpi" : "";
-                    html += `<td class="${tdClass}">${isNQA_ReadOnly ? `<span>${displayVal}</span>` : `<input type="text" class="${alertCss}" value="${displayVal}" onchange="updateCell(${i},${idx},this.value)">`}</td>`;
+                    html += `<td class="${tdClass}">${isNQA ? `<span>${display}</span>` : `<input type="text" class="${alertCss}" value="${display}" onchange="update(${i},${idx},this.value)">`}</td>`;
                 }
             });
-            let anaContent = data[i][anaIdx] || "";
-            let fileBtn = anaContent.includes("http") ? `<button class="btn btn-sm btn-dark p-0 px-2 mb-1" style="font-size:8px" onclick="window.open('${anaContent.match(/https?:\/\/[^\s]+/)}')">เปิดดู</button>` : "";
-            html += `<td class="text-center">${fileBtn}<input type="file" style="font-size:8px" onchange="uploadFileEntry(this, ${i})"></td></tr>`;
+            html += `<td class="text-center"><input type="file" style="font-size:8px" onchange="upload(${i}, this)"></td></tr>`;
         }
         html += `</tbody></table>`;
-        document.getElementById('table-display').innerHTML = html;
+        document.getElementById('table-output').innerHTML = html;
     }
 
-    function updateCell(r, c, v) { localData[r][c] = v; }
+    function update(r, c, v) { cached[r][c] = v; }
 
-    function saveToSheet() {
-        fetch(API_URI, { 
-            method: "POST", 
-            mode: "no-cors", 
-            body: JSON.stringify({ sheetName: currentSheet, data: localData.slice(1) }) 
-        }).then(() => alert("✅ บันทึกข้อมูลสำเร็จ"));
+    function saveData() {
+        fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: cached.slice(1) }) })
+        .then(() => alert("✅ ส่งข้อมูลสำเร็จ"));
     }
 
-    async function uploadFileEntry(input, rIdx) {
+    async function upload(rIdx, input) {
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const res = await fetch(API_URI, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
+            const res = await fetch(API, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
             const url = await res.text();
-            const anaIdx = localData[0].indexOf('วิเคราะห์');
-            localData[rIdx][anaIdx] += ` \n📎 ไฟล์: ${url}`;
+            const anaIdx = cached[0].indexOf('วิเคราะห์');
+            cached[rIdx][anaIdx] += ` \n📎 ไฟล์: ${url}`;
             alert("📁 อัปโหลดสำเร็จ");
-            fetchSheetData();
+            refreshData();
         };
         reader.readAsDataURL(file);
     }
 
-    function exportFile() { XLSX.writeFile(XLSX.utils.table_to_book(document.querySelector('table')), `${currentSheet}_Report.xlsx`); }
+    function exportData() { XLSX.writeFile(XLSX.utils.table_to_book(document.querySelector('table')), `${activeSheet}.xlsx`); }
 </script>
 </body>
 </html>
