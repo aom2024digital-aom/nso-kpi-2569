@@ -1,169 +1,172 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <title>NSO SATUN Dashboard 2569</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        :root { --primary: #2d3436; --accent: #00b894; --warn: #fff9db; --danger: #d63031; }
-        body { font-family: 'Noto Sans Thai', sans-serif; background: #f0f2f5; display: flex; height: 100vh; margin: 0; font-size: 11px; overflow: hidden; }
-        
-        /* Modern Card Sidebar */
-        .sidebar { width: 240px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; flex-shrink: 0; padding: 15px; }
-        .sidebar-header { text-align: center; margin-bottom: 20px; }
-        .nav-scroll { flex: 1; overflow-y: auto; padding-right: 5px; }
-        
-        .card-nav { 
-            border-radius: 12px; padding: 12px; margin-bottom: 10px; cursor: pointer; 
-            transition: 0.3s; border: 1px solid #eee; display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .card-nav:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .card-nav i { font-size: 20px; }
-        
-        /* Color Schemes for Cards */
-        .ward-card { background: #e3f2fd; color: #1565c0; }
-        .nqa-card { background: #f3e5f5; color: #7b1fa2; }
-        .ic-card { background: #e8f5e9; color: #2e7d32; }
-        .adm-card { background: #fff3e0; color: #ef6c00; }
-
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-bar { height: 55px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-        .content-body { flex: 1; padding: 15px; overflow: hidden; display: flex; flex-direction: column; }
-        
-        /* Table Scroll & Wrap Text */
-        .table-container { 
-            background: white; border-radius: 12px; padding: 10px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: auto; flex: 1;
-        }
-        table { width: max-content; min-width: 100%; border-collapse: collapse; }
-        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; padding: 10px; border: 1px solid #eee; text-align: center; }
-        td { border: 1px solid #eee; padding: 8px; vertical-align: top !important; text-align: left !important; white-space: normal !important; word-wrap: break-word; }
-        
-        .no-data { background-color: var(--warn) !important; }
-        .text-alert { color: var(--danger) !important; font-weight: 600; }
-        input { border: none; background: transparent; font-size: 11px; width: 100%; }
-        textarea { width: 100%; border: 1px solid #eee; border-radius: 4px; padding: 5px; min-height: 80px; }
-        .btn-file { font-size: 9px; margin-bottom: 3px; width: 100%; }
-    </style>
+  <meta charset="UTF-8">
+  <title>NSO SATUN KPI 2569</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root { --nso-blue: #00A3AD; --nso-dark: #1a2a3a; --bg-empty: #fffde7; }
+    body { font-family: 'Noto Sans Thai', sans-serif; background: #f0f4f8; font-size: 11px; margin: 0; }
+    .header-banner { background: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .nurse-logo { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--nso-blue); }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px; }
+    .nso-card { background: white; border-radius: 15px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; border-bottom: 5px solid var(--nso-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+    .nso-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .nso-card i { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+    
+    .table-container { background: white; margin: 20px; border-radius: 12px; padding: 15px; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    table { width: max-content; min-width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #eef2f7; padding: 8px; vertical-align: top; text-align: left; white-space: normal; word-wrap: break-word; }
+    th { background: #f8fafc; position: sticky; top: 0; z-index: 10; font-weight: 600; text-align: center; }
+    .empty-cell { background-color: var(--bg-empty) !important; }
+    .alert-high { color: #dc3545 !important; font-weight: bold; }
+    
+    .outcome-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; padding: 20px; }
+    .graph-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    textarea { width: 100%; min-height: 40px; font-size: 10px; border: 1px solid #ddd; border-radius: 5px; }
+  </style>
 </head>
 <body>
 
-<nav class="sidebar">
-    <div class="sidebar-header">
-        <img src="https://cdn-icons-png.flaticon.com/512/3304/3304567.png" width="50" alt="cartoon icon">
-        <h6 class="fw-bold mt-2">NSO SATUN 2569</h6>
-    </div>
-    <div class="nav-scroll" id="sidebar-list">
-        <!-- Sidebar Cards will load here -->
-    </div>
-</nav>
+<div class="header-banner">
+  <div class="d-flex align-items-center gap-3">
+    <img src="https://cdn-icons-png.flaticon.com/512/3209/3209100.png" class="nurse-logo">
+    <div><h5 class="fw-bold mb-0 text-primary">NSO SATUN HOSPITAL KPI 2569</h5><small class="text-muted">ระบบวิเคราะห์ข้อมูลทางการพยาบาล</small></div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-sm btn-outline-dark" onclick="location.reload()"><i class="bi bi-house-door"></i> หน้าหลัก</button>
+    <button class="btn btn-sm btn-primary" onclick="saveData()">บันทึก</button>
+    <button class="btn btn-sm btn-success" onclick="exportExcel()">Export Excel</button>
+  </div>
+</div>
 
-<main class="main-content">
-    <div class="top-bar">
-        <span id="title-tag" class="fw-bold text-primary fs-6">กรุณาเลือกเมนูเพื่อดูข้อมูล</span>
-        <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-primary rounded-pill px-4" onclick="save()">บันทึกข้อมูล</button>
-            <button class="btn btn-sm btn-dark rounded-pill px-4" onclick="refresh()">ดึงข้อมูล</button>
-            <button class="btn btn-sm btn-outline-success rounded-pill px-4" onclick="exportExcel()">Export</button>
-        </div>
-    </div>
-    <div class="content-body">
-        <div class="table-container">
-            <div id="table-display"><p class="text-center py-5 text-muted">ยินดีต้อนรับสู่ระบบ NSO SATUN Analytics</p></div>
-        </div>
-    </div>
-</main>
+<div id="main-view">
+  <div class="card-grid" id="menu-cards"></div>
+  <div class="card-grid">
+    <div class="nso-card" style="border-color: #ff9f43;" onclick="loadTab('กองการ_68')"><i class="bi bi-folder-fill text-warning"></i> กองการ_68</div>
+    <div class="nso-card" style="border-color: #28c76f;" onclick="loadNursingOutcome()"><i class="bi bi-graph-up-arrow text-success"></i> Nursing Outcome</div>
+    <div class="nso-card" style="border-color: #00cfe8;" onclick="loadTab('IC')"><i class="bi bi-activity text-info"></i> IC Analytics</div>
+    <div class="nso-card" style="border-color: #ea5455;" onclick="loadTab('NQA')"><i class="bi bi-shield-check text-danger"></i> NQA Read-Only</div>
+  </div>
+</div>
+
+<div id="detail-view" class="d-none">
+  <div class="p-3 bg-white mx-4 mt-3 rounded shadow-sm d-flex gap-3">
+    <input type="text" id="filter-text" class="form-control form-control-sm" placeholder="🔍 ค้นหาตัวชี้วัด..." onkeyup="filterTable()">
+    <select id="filter-freq" class="form-select form-select-sm" onchange="filterTable()"><option value="">-- ความถี่ --</option></select>
+    <select id="filter-month" class="form-select form-select-sm" onchange="filterTable()"><option value="">-- เดือน --</option></select>
+  </div>
+  <div class="table-container" id="table-wrap"></div>
+</div>
+
+<div id="outcome-view" class="d-none">
+  <div class="outcome-grid" id="outcome-container"></div>
+</div>
 
 <script>
-    const URI = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
-    let activeTab = "", activeData = [];
+  const API = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
+  let activeSheet = "", masterData = [];
 
-    window.onload = () => {
-        fetch(`${URI}?action=getWards`).then(res => res.json()).then(wards => {
-            let html = wards.map(w => `<div class="card-nav ward-card" onclick="loadTab('${w}')"><i class="bi bi-hospital"></i> <b>${w}</b></div>`).join('');
-            html += `<div class="card-nav adm-card" onclick="loadTab('กองการ_68')"><i class="bi bi-file-earmark-person"></i> <b>กองการ_68</b></div>`;
-            html += `<div class="card-nav ic-card" onclick="loadTab('IC')"><i class="bi bi-virus"></i> <b>IC Analytics</b></div>`;
-            html += `<div class="card-nav nqa-card" onclick="loadTab('NQA')"><i class="bi bi-patch-check"></i> <b>NQA</b></div>`;
-            document.getElementById('sidebar-list').innerHTML = html;
-        });
-    };
+  window.onload = () => {
+    fetch(`${API}?action=getWards`).then(res => res.json()).then(wards => {
+      document.getElementById('menu-cards').innerHTML = wards.map((w,i) => `
+        <div class="nso-card" style="border-color: hsl(${i*30}, 70%, 50%)" onclick="loadTab('${w}')">
+          <i class="bi bi-hospital text-primary"></i> <b>${w}</b>
+        </div>`).join('');
+    });
+  };
 
-    function loadTab(name) {
-        activeTab = name;
-        document.getElementById('title-tag').innerText = "📍 รายงาน: " + name;
-        refresh();
-    }
+  function loadTab(name) {
+    activeSheet = name;
+    document.getElementById('main-view').classList.add('d-none');
+    document.getElementById('outcome-view').classList.add('d-none');
+    document.getElementById('detail-view').classList.remove('d-none');
+    fetch(`${API}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
+      masterData = data; renderTable(data);
+    });
+  }
 
-    function refresh() {
-        document.getElementById('table-display').innerHTML = '<p class="text-center py-5">กำลังโหลดข้อมูล...</p>';
-        fetch(`${URI}?action=getData&sheetName=${activeTab}`).then(res => res.json()).then(data => {
-            activeData = data;
-            draw(data);
-        });
-    }
+  function renderTable(data) {
+    if(!data.length) return;
+    const head = data[0];
+    let showCols = [];
+    if(activeSheet.startsWith('Ward')) showCols = ['รายการตัวชี้วัด','เป้าหมาย','ความถี่','ตค.68','พย','ธค','มค.69','กพ','มีค','เมย','พค','มิย','กค','สค','กย','สรุป','วิเคราะห์'];
+    else if(activeSheet === 'IC') showCols = ['ตำแหน่ง','เกณฑ์','ตัวตั้งตัวหาร','63','64','65','66','67','68','ต.ค.-68','พ.ย.-68','ธ.ค.-68','มค.69','กพ','มีค','เมย','พค','มิย','กค','สค','กย','สรุป','วิเคราะห์'];
+    else if(activeSheet === 'NQA') showCols = ['เป้าหมาย','ความถี่','รายการตัวชี้วัด','66','67','68','ตค.68','พย','ธค','มค.69','กพ','มีค','ไตรมาส 1','ไตรมาส 2','ไตรมาส 3','ไตรมาส 4','2569','สรุป','วิเคราะห์'];
+    else if(activeSheet === 'กองการ_68') showCols = ['ข้อมูล','ชื่อข้อมูล','ตัวตั้ง','ตัวหาร','ผลลัพธ์','สรุป','วิเคราะห์'];
 
-    function draw(data) {
-        if(!data.length) return;
-        const head = data[0];
+    const colIndices = showCols.map(c => head.indexOf(c)).filter(i => i !== -1);
+    const targetIdx = head.indexOf('เป้าหมาย') !== -1 ? head.indexOf('เป้าหมาย') : head.indexOf('เกณฑ์');
+
+    let html = `<table><thead><tr>`;
+    colIndices.forEach(i => html += `<th>${head[i]}</th>`);
+    html += `<th>จัดการไฟล์</th></tr></thead><tbody>`;
+
+    for(let i=1; i<data.length; i++){
+      html += `<tr>`;
+      colIndices.forEach(idx => {
+        let cell = data[i][idx], val = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+        let isEmpty = (val === ""), isAlert = (typeof cell === 'number' && cell > (data[i][targetIdx] || 9999)) ? "alert-high" : "";
+        let isReadOnly = (activeSheet === 'NQA' && head[idx] !== 'วิเคราะห์');
         
-        // กรองคอลัมน์ที่ไม่ต้องการออก
-        const ignore = ["หาร", "หมายเหตุ", "รหัส", "ข้อมูล", "ตัวตั้ง", "ตัวหาร"];
-        const colIndices = head.map((h, i) => ignore.some(ig => h.includes(ig)) ? -1 : i).filter(i => i !== -1);
-
-        let html = `<table><thead><tr>`;
-        colIndices.forEach(i => html += `<th>${head[i]}</th>`);
-        html += `<th>จัดการไฟล์</th></tr></thead><tbody>`;
-
-        const targetIdx = head.indexOf('เป้าหมาย');
-        const anaIdx = head.indexOf('วิเคราะห์');
-
-        for(let i=1; i<data.length; i++){
-            html += `<tr>`;
-            colIndices.forEach(idx => {
-                let cell = data[i][idx];
-                let isNQA = (activeTab === 'NQA' && head[idx] !== 'วิเคราะห์');
-                let target = parseFloat(data[i][targetIdx]) || 999;
-                let alertClass = (typeof cell === 'number' && cell > target) ? "text-alert" : "";
-                let emptyClass = (cell === "" || cell === null) ? "no-data" : "";
-                let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
-
-                if(head[idx] === 'วิเคราะห์') {
-                    html += `<td class="${emptyClass}"><textarea onchange="update(${i},${idx},this.value)">${display}</textarea></td>`;
-                } else {
-                    html += `<td class="${emptyClass}">${isNQA ? `<span>${display}</span>` : `<input type="text" class="${alertClass}" value="${display}" onchange="update(${i},${idx},this.value)">`}</td>`;
-                }
-            });
-            
-            let val = data[i][anaIdx] || "";
-            let fileLink = val.match(/https?:\/\/[^\s]+/);
-            let btnUI = fileLink ? `<button class="btn btn-success btn-file" onclick="window.open('${fileLink[0]}')">เปิดไฟล์</button>` : "";
-            html += `<td class="text-center">${btnUI}<input type="file" style="font-size:8px" onchange="upload(${i}, this)"></td></tr>`;
-        }
-        html += `</tbody></table>`;
-        document.getElementById('table-display').innerHTML = html;
+        if(head[idx] === 'วิเคราะห์') html += `<td><textarea onchange="updateData(${i},${idx},this.value)">${val}</textarea></td>`;
+        else html += `<td class="${isEmpty?'empty-cell':''} ${isAlert}">${isReadOnly ? `<span>${val}</span>` : `<input type="text" value="${val}" onchange="updateData(${i},${idx},this.value)">`}</td>`;
+      });
+      let ana = data[i][head.indexOf('วิเคราะห์')] || "";
+      let btn = ana.includes('http') ? `<button class="btn btn-dark btn-sm p-0 px-1 mb-1" style="font-size:8px" onclick="window.open('${ana.match(/https?:\/\/[^\s]+/)}')">เปิดไฟล์</button>` : "";
+      html += `<td class="text-center">${btn}<input type="file" style="font-size:8px" onchange="uploadFile(this, ${i})"></td></tr>`;
     }
+    document.getElementById('table-wrap').innerHTML = html + "</tbody></table>";
+  }
 
-    function update(r, c, v) { activeData[r][c] = v; }
-    function save() { fetch(URI, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeTab, data: activeData.slice(1) }) }).then(() => alert("✅ บันทึกแล้ว")); }
+  function loadNursingOutcome() {
+    activeSheet = "NQA";
+    document.getElementById('main-view').classList.add('d-none');
+    document.getElementById('detail-view').classList.add('d-none');
+    document.getElementById('outcome-view').classList.remove('d-none');
+    fetch(`${API}?action=getData&sheetName=NQA`).then(res => res.json()).then(data => {
+      const indicators = ["2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14", "2.15", "2.16", "2.17"];
+      const container = document.getElementById('outcome-container');
+      container.innerHTML = "";
+      
+      indicators.forEach((code, idx) => {
+        const row = data.find(r => r[4] && r[4].toString().startsWith(code));
+        if(!row) return;
+        const id = `chart-${idx}`;
+        container.innerHTML += `
+          <div class="graph-card" id="cap-${id}">
+            <h6 class="fw-bold text-primary mb-2">${row[4]}</h6>
+            <div style="height:150px"><canvas id="${id}"></canvas></div>
+            <textarea class="mt-2" placeholder="วิเคราะห์...">${row[19]||""}</textarea>
+            <div class="d-flex justify-content-between mt-2">
+              <input type="file" style="font-size:8px">
+              <button class="btn btn-sm btn-info text-white py-0" onclick="captureGraph('cap-${id}')"><i class="bi bi-camera"></i> Capture</button>
+            </div>
+          </div>`;
+        setTimeout(() => drawChart(id, [row[5], row[6], row[7], row[17]], row[1]), 100);
+      });
+    });
+  }
 
-    async function upload(r, input) {
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const res = await fetch(URI, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
-            const url = await res.text();
-            activeData[r][activeData[0].indexOf('วิเคราะห์')] += ` \n📎 ลิงก์ไฟล์: ${url}`;
-            alert("📁 อัปโหลดสำเร็จ");
-            refresh();
-        };
-        reader.readAsDataURL(file);
-    }
+  function drawChart(id, vals, target) {
+    new Chart(document.getElementById(id), {
+      type: 'line',
+      data: { labels: ['66', '67', '68', '2569'], datasets: [
+        { label: 'ผลลัพธ์', data: vals, borderColor: '#00A3AD', tension: 0.3 },
+        { label: 'เป้าหมาย', data: Array(4).fill(target), borderColor: 'red', borderDash: [5,5], pointRadius: 0 }
+      ]}
+    });
+  }
 
-    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.querySelector('table')), `${activeTab}.xlsx`); }
+  function captureGraph(id) { html2canvas(document.getElementById(id)).then(cv => { let a = document.createElement('a'); a.download = 'outcome.png'; a.href = cv.toDataURL(); a.click(); }); }
+  function updateData(r, c, v) { masterData[r][c] = v; }
+  function saveData() { fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: masterData.slice(1) }) }).then(() => alert("✅ บันทึกสำเร็จ")); }
+  function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.querySelector('table')), `${activeSheet}.xlsx`); }
 </script>
 </body>
 </html>
