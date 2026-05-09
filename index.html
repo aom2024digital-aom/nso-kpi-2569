@@ -35,8 +35,6 @@
         .filter-bar { background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
         .table-wrapper { flex: 1; overflow: auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        
-        /* ปรับขนาดคอลัมน์ให้พอดีเนื้อหา */
         table { border-collapse: collapse; width: max-content; min-width: 100%; table-layout: auto; }
         th { background: #E2E8F0 !important; position: sticky; top: 0; z-index: 10; padding: 8px; border: 1px solid #CBD5E1; text-align: left; font-weight: 600; white-space: nowrap; }
         td { border: 1px solid #CBD5E1; padding: 6px; vertical-align: top; text-align: left; background: white; white-space: nowrap; }
@@ -44,15 +42,15 @@
         .empty-cell { background-color: #FFFFE0 !important; }
         .alert-high { color: var(--danger) !important; font-weight: bold; }
         
-        /* บังคับ Wrap เฉพาะคอลัมน์ที่ยาวๆ */
         .wrap-col { min-width: 250px; max-width: 350px; white-space: pre-wrap !important; word-wrap: break-word; line-height: 1.5; }
         
         input[type="text"] { border: 1px solid transparent; width: 100%; min-width: 40px; font-size: 11px; padding: 2px; }
         input[type="text"]:focus { border-bottom: 1px solid var(--accent); outline: none; background: #fff; }
         textarea { width: 100%; min-width: 150px; min-height: 60px; font-size: 11px; padding: 4px; border: 1px solid #CBD5E1; border-radius: 4px; resize: vertical; white-space: pre-wrap; }
         
-        .file-actions { display: flex; flex-direction: column; gap: 4px; min-width: 90px; }
-        .btn-file { font-size: 9px; padding: 4px 8px; width: 100%; font-weight: bold; }
+        /* ปรับแต่งปุ่มไฟล์ */
+        .file-actions { display: flex; flex-direction: column; gap: 6px; min-width: 100px; }
+        .btn-file { font-size: 10px; padding: 5px 8px; width: 100%; font-weight: bold; }
         
         #outcome-view { display: none; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; padding-bottom: 30px; }
         .chart-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -146,7 +144,6 @@
         document.getElementById('outcome-view').innerHTML = '<h5 class="col-12 text-center mt-5">กำลังวิเคราะห์ข้อมูลกราฟ...</h5>';
         fetch(`${API}?action=getData&sheetName=NQA`).then(res => res.json()).then(data => {
             masterData = data;
-            // สร้างคอลัมน์ไฟล์แนบเผื่อไว้สำหรับกราฟ หากยังไม่มี
             let fileColIdx = masterData[0].findIndex(h => String(h).trim() === 'ไฟล์แนบ');
             if(fileColIdx === -1) {
                 masterData[0].push('ไฟล์แนบ');
@@ -161,7 +158,6 @@
         fetch(`${API}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
             masterData = data;
             
-            // ตรวจสอบและสร้างคอลัมน์ "ไฟล์แนบ" อัตโนมัติหากยังไม่มี
             let fileColIdx = masterData[0].findIndex(h => String(h).trim() === 'ไฟล์แนบ');
             if(fileColIdx === -1) {
                 masterData[0].push('ไฟล์แนบ');
@@ -198,7 +194,7 @@
 
         let html = `<table><thead><tr>`;
         colIndices.forEach(i => html += `<th>${rawHead[i]}</th>`);
-        html += `<th>จัดการไฟล์แนบ</th></tr></thead><tbody>`;
+        html += `<th>จัดการไฟล์/หลักฐาน</th></tr></thead><tbody>`;
 
         for(let r=1; r<data.length; r++) {
             html += `<tr>`;
@@ -221,15 +217,17 @@
                 }
             });
             
-            // ใช้คอลัมน์ "ไฟล์แนบ" ในการเก็บลิงก์
+            // สร้างปุ่มดูไฟล์ (สีฟ้า) และปุ่มอัปโหลด
             let fileLink = String(data[r][fileColIdx] || "").match(/https?:\/\/[^\s]+/);
-            let btnOpen = fileLink ? `<button class="btn btn-primary btn-file" onclick="window.open('${fileLink[0]}')"><i class="bi bi-eye-fill"></i> ดูไฟล์</button>` : `<button class="btn btn-secondary btn-file" disabled>ไม่มีไฟล์</button>`;
+            let btnOpen = fileLink 
+                ? `<button class="btn btn-primary btn-file mb-1" onclick="window.open('${fileLink[0]}', '_blank')"><i class="bi bi-eye-fill"></i> ดูไฟล์แนบ</button>` 
+                : `<button class="btn btn-secondary btn-file mb-1" disabled><i class="bi bi-eye-slash"></i> ไม่มีไฟล์</button>`;
             
             html += `<td class="text-center">
                         <div class="file-actions">
                             ${btnOpen}
                             <label class="btn btn-outline-dark btn-file mb-0 cursor-pointer">
-                                <i class="bi bi-cloud-upload"></i> อัพโหลด <input type="file" hidden onchange="doUpload(this, ${r}, ${fileColIdx})">
+                                <i class="bi bi-cloud-upload"></i> แก้ไข/อัพโหลดไฟล์ <input type="file" hidden onchange="doUpload(this, ${r}, ${fileColIdx})">
                             </label>
                         </div>
                      </td></tr>`;
@@ -256,7 +254,6 @@
     }
 
     function saveData() {
-        // ส่งข้อมูลแบบรวมคอลัมน์ใหม่ (ไฟล์แนบ) ไปบันทึกทับทั้งชีท
         fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: masterData }) })
         .then(() => alert("✅ ข้อมูลถูกส่งไปบันทึกแล้ว"));
     }
@@ -275,7 +272,7 @@
                 alert(url);
             } else {
                 masterData[rIdx][fileColIdx] = url;
-                alert("📁 อัพโหลดไฟล์สำเร็จแล้ว กรุณากดบันทึกข้อมูลด้านบน");
+                alert("📁 อัพโหลดไฟล์สำเร็จแล้ว ลิงก์ถูกเพิ่มลงในระบบ (กรุณากดบันทึกข้อมูลด้านบนด้วยครับ)");
                 if(activeSheet !== 'NQA') fetchData(); 
             }
         };
@@ -302,7 +299,9 @@
             let row = data[rowIdx];
             
             let fileLink = String(row[fileColIdx] || "").match(/https?:\/\/[^\s]+/);
-            let btnOpen = fileLink ? `<button class="btn btn-sm btn-primary" onclick="window.open('${fileLink[0]}')"><i class="bi bi-eye"></i> ดูไฟล์</button>` : `<button class="btn btn-sm btn-secondary" disabled>ไม่มีไฟล์</button>`;
+            let btnOpen = fileLink 
+                ? `<button class="btn btn-sm btn-primary" onclick="window.open('${fileLink[0]}', '_blank')"><i class="bi bi-eye-fill"></i> ดูไฟล์แนบ</button>` 
+                : `<button class="btn btn-sm btn-secondary" disabled><i class="bi bi-eye-slash"></i> ไม่มีไฟล์</button>`;
 
             let html = `
             <div class="chart-card" id="card-out-${index}">
