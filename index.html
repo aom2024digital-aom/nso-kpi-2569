@@ -2,204 +2,159 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>NSO SATUN KPI - Optimized UI</title>
+    <title>NSO SATUN 2569</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --primary: #1e1e2d; --accent: #00A3AD; --danger: #ff4d4d; }
-        body { font-family: 'Noto Sans Thai', sans-serif; background: #f4f6f9; display: flex; height: 100vh; margin: 0; font-size: 11px; overflow: hidden; }
-        
-        .sidebar { width: 220px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        :root { --primary: #1a1a2e; --accent: #00d2d3; }
+        body { font-family: 'Noto Sans Thai', sans-serif; background: #f0f2f5; height: 100vh; margin: 0; font-size: 10px; overflow: hidden; display: flex; }
+        .login-overlay { position: fixed; inset: 0; background: var(--primary); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .sidebar { width: 200px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-menu { flex: 1; overflow-y: auto; }
-        .nav-btn { padding: 10px 15px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; }
-        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent); }
-
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-nav { height: 48px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
-        .content-body { flex: 1; padding: 10px; overflow-y: auto; }
-        
-        .table-card { background: white; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); padding: 8px; max-height: 82vh; overflow: auto; }
-        
-        /* บังคับ Wrap Text และ Alignment ชิดซ้ายบน */
+        .nav-btn { padding: 8px 15px; color: #adb5bd; cursor: pointer; border-bottom: 1px solid #2d2d44; display: block; text-decoration: none; }
+        .nav-btn:hover, .nav-btn.active { background: #2d2d44; color: white; border-left: 3px solid var(--accent); }
+        .main-app { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-nav { height: 45px; background: white; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; }
+        .content-area { flex: 1; padding: 10px; overflow-y: auto; }
+        .table-wrap { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 5px; max-height: 85vh; overflow: auto; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { 
-            border: 1px solid #eef2f7; 
-            padding: 6px !important; 
-            white-space: normal !important; 
-            word-wrap: break-word; 
-            vertical-align: top !important; 
-            text-align: left !important;
-            font-size: 11px;
-        }
-        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; font-weight: 600; text-align: center !important; }
+        th, td { border: 1px solid #eee; padding: 4px; vertical-align: top; text-align: left; }
+        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; text-align: center; font-weight: 600; }
         
-        .high-alert { color: var(--danger) !important; font-weight: bold; }
-        input { width: 100%; border: none; background: transparent; text-align: left; font-size: 11px; }
-        textarea { width: 100%; min-height: 60px; border: 1px solid #eef2f7; border-radius: 3px; font-size: 10px; padding: 4px; resize: vertical; }
-        .filter-area { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        /* แก้ไขปัญหาข้อความยาวด้วย scrolling ในเซลล์ */
+        .scroll-cell { max-height: 50px; overflow-y: auto; white-space: normal; word-break: break-word; line-height: 1.2; }
+        
+        .high-alert { color: #ff4d4d !important; font-weight: bold; }
+        input[type="text"] { width: 100%; border: none; background: transparent; font-size: 10px; }
+        textarea { width: 100%; height: 50px; font-size: 9px; border: 1px solid #eee; }
+        .action-btns { display: flex; gap: 2px; }
     </style>
 </head>
 <body>
 
-<nav class="sidebar">
-    <div class="p-3 text-center border-bottom border-secondary"><h6>NSO SATUN 2569</h6></div>
-    <div class="sidebar-menu">
-        <div id="ward-nav"></div>
-        <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>
-        <a class="nav-btn" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC Analytics</a>
-        <a class="nav-btn" onclick="loadTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>
+<div id="login-screen" class="login-overlay">
+    <div class="bg-white p-4 rounded shadow text-center" style="width: 300px;">
+        <h5 class="mb-3">เข้าสู่ระบบ NSO SATUN</h5>
+        <input type="text" id="log-user" class="form-control mb-2" placeholder="Username (WARD 1, ER...)">
+        <input type="password" id="log-pass" class="form-control mb-3" placeholder="Password">
+        <button class="btn btn-primary w-100" onclick="handleLogin()">Login</button>
     </div>
+</div>
+
+<nav class="sidebar">
+    <div class="p-3 text-center border-bottom border-secondary"><h6>NSO SATUN</h6></div>
+    <div class="sidebar-menu" id="ward-nav"></div>
+    <a class="nav-btn" onclick="loadTab('กองการ_68')">กองการ_68</a>
+    <a class="nav-btn" onclick="loadTab('IC')">IC Analytics</a>
+    <a class="nav-btn" onclick="loadTab('NQA')">NQA (Read-Only)</a>
 </nav>
 
-<main class="main-content">
+<main class="main-app">
     <div class="top-nav">
-        <span id="page-title" class="fw-bold text-primary">กรุณาเลือกเมนู</span>
+        <span id="title-text" class="fw-bold text-primary">KPI 2569</span>
         <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-primary px-3" onclick="saveData()">บันทึก</button>
-            <button class="btn btn-sm btn-dark px-3" onclick="fetchData()">ดึงข้อมูล</button>
-            <button class="btn btn-sm btn-outline-success px-3" onclick="exportToExcel()">Export</button>
-            <button id="btn-cap" class="btn btn-sm btn-info text-white d-none" onclick="doCapture()">Capture</button>
+            <button class="btn btn-sm btn-primary" onclick="saveData()">บันทึก</button>
+            <button class="btn btn-sm btn-dark" onclick="fetchData()">ดึงข้อมูล</button>
+            <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()">Export</button>
         </div>
     </div>
-
-    <div class="content-body" id="capture-zone">
-        <div class="filter-area">
-            <input type="text" id="search-q" class="form-control form-control-sm" style="width:180px" placeholder="🔎 ค้นหาตัวชี้วัด..." onkeyup="applyFilters()">
-            <select id="month-q" class="form-select form-select-sm" style="width:130px" onchange="applyFilters()"><option value="">-- เดือน --</option></select>
-            <select id="freq-q" class="form-select form-select-sm" style="width:130px" onchange="applyFilters()"><option value="">-- ความถี่ --</option></select>
-        </div>
-        <div id="table-view" class="table-card overflow-auto">
-            <p class="text-center py-5 text-muted">พร้อมใช้งาน กรุณาเลือกชีทงาน</p>
-        </div>
+    <div class="content-area">
+        <div id="table-view" class="table-wrap"></div>
     </div>
 </main>
 
 <script>
-    const API_URI = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
-    let activeSheet = "", cachedData = [];
+    const API = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
+    let currentSheet = "", master = [];
 
-    window.onload = () => {
-        fetch(`${API_URI}?action=getWards`).then(res => res.json()).then(wards => {
-            document.getElementById('ward-nav').innerHTML = wards.map(w => 
-                `<a class="nav-btn" onclick="loadTab('${w}')"><i class="bi bi-hospital"></i> ${w}</a>`
-            ).join('');
+    function handleLogin() {
+        const user = document.getElementById('log-user').value;
+        const pass = document.getElementById('log-pass').value;
+        fetch(API, { method: "POST", body: JSON.stringify({ action: 'login', user, pass }) })
+        .then(r => r.json()).then(res => {
+            if(res.success) {
+                document.getElementById('login-screen').style.display = 'none';
+                initMenu();
+            } else alert(res.msg);
         });
-    };
+    }
+
+    function initMenu() {
+        fetch(`${API}?action=getWards`).then(r => r.json()).then(data => {
+            document.getElementById('ward-nav').innerHTML = data.map(w => `<a class="nav-btn" onclick="loadTab('${w}')">${w}</a>`).join('');
+        });
+    }
 
     function loadTab(name) {
-        activeSheet = name;
-        document.getElementById('page-title').innerText = "📍 " + name;
-        document.getElementById('btn-cap').classList.toggle('d-none', activeSheet !== 'IC');
+        currentSheet = name;
+        document.getElementById('title-text').innerText = name;
         fetchData();
     }
 
     function fetchData() {
-        const view = document.getElementById('table-view');
-        view.innerHTML = '<p class="text-center py-5">กำลังดึงข้อมูล...</p>';
-        fetch(`${API_URI}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
-            cachedData = data;
-            renderUI(data);
+        document.getElementById('table-view').innerHTML = '<p class="text-center p-5">Loading...</p>';
+        fetch(`${API}?action=getData&sheetName=${currentSheet}`).then(r => r.json()).then(data => {
+            master = data;
+            render(data);
         });
     }
 
-    function renderUI(data) {
+    function render(data) {
         if(!data.length) return;
         const head = data[0];
-        
-        // กำหนดคอลัมน์ที่ต้องแสดงตามเงื่อนไขชีท
-        let showCols = [];
-        if(activeSheet.toLowerCase().startsWith('ward')) {
-            showCols = ['รายการตัวชี้วัด','เป้าหมาย','ความถี่','ตค.68','พย','ธค','มค.69','กพ','มีค','เมย','พค','มิย','กค','สค','กย','สรุป','วิเคราะห์'];
-        } else if(activeSheet === 'NQA') {
-            showCols = ['เป้าหมาย','ความถี่','รายการตัวชี้วัด','66','67','68','ตค.68','พย','ธค','มค.69','กพ','มีค','ไตรมาส 1','ไตรมาส 2','ไตรมาส 3','ไตรมาส 4','2569','สรุป','วิเคราะห์'];
-        } else if(activeSheet === 'กองการ_68') {
-            showCols = ['รหัส','ข้อมูล','ชื่อข้อมูล','ตัวตั้ง','ตัวหาร','ผลลัพธ์','สรุป','วิเคราะห์'];
-        } else if(activeSheet === 'IC') {
-            showCols = ['ตำแหน่ง','ตัวตั้งตัวหาร','63','64','65','66','67','68','ต.ค.-68','พ.ย.-68','ธ.ค.-68','มค.69','กพ','มีค','เมย','พค','มิย','กค','สค','กย','สรุป','วิเคราะห์'];
-        }
+        let html = `<table><thead><tr>`;
+        head.forEach(h => html += `<th>${h}</th>`);
+        html += `<th>จัดการไฟล์</th></tr></thead><tbody>`;
 
-        const colIndices = showCols.map(c => head.indexOf(c)).filter(i => i !== -1);
         const targetIdx = head.indexOf('เป้าหมาย');
-        const freqIdx = head.indexOf('ความถี่');
 
-        let html = `<table id="kpi-table"><thead><tr>`;
-        colIndices.forEach(i => html += `<th>${head[i]}</th>`);
-        html += `<th>แนบไฟล์</th></tr></thead><tbody>`;
-
-        for(let i=1; i<data.length; i++){
+        for(let i=1; i<data.length; i++) {
             html += `<tr>`;
-            colIndices.forEach(idx => {
-                let cell = data[i][idx];
-                let headName = head[idx];
-                let isAlert = (typeof cell === 'number' && cell > (data[i][targetIdx] || 999)) ? "high-alert" : "";
-                let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
-                let isReadOnly = (activeSheet === 'NQA' && headName !== 'วิเคราะห์');
-
-                // Logic หาค่าเฉลี่ยสำหรับคอลัมน์ "สรุป" ใน Ward
-                if(headName === 'สรุป' && activeSheet.toLowerCase().startsWith('ward')) {
-                    let nums = data[i].slice(4, 16).filter(v => typeof v === 'number');
-                    display = nums.length ? (nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(2) : "0.00";
-                }
-
-                if(headName === 'วิเคราะห์') {
-                    html += `<td><textarea onchange="updateData(${i},${idx},this.value)">${display}</textarea></td>`;
+            data[i].forEach((cell, idx) => {
+                let target = parseFloat(data[i][targetIdx]) || 999;
+                let val = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+                let alert = (typeof cell === 'number' && cell > target) ? "high-alert" : "";
+                
+                if(head[idx] === 'วิเคราะห์') {
+                    html += `<td><textarea onchange="upd(${i},${idx},this.value)">${val}</textarea></td>`;
                 } else {
-                    html += `<td>${isReadOnly ? `<span>${display}</span>` : `<input type="text" class="${isAlert}" value="${display}" onchange="updateData(${i},${idx},this.value)">`}</td>`;
+                    html += `<td><div class="scroll-cell ${alert}">${val.length > 20 ? `<div class="scroll-cell">${val}</div>` : `<input type="text" value="${val}" onchange="upd(${i},${idx},this.value)">`}</div></td>`;
                 }
             });
-            html += `<td><input type="file" style="font-size:9px" onchange="doUpload(this, ${i})"></td></tr>`;
+            const fileLink = master[i][head.indexOf('วิเคราะห์')].match(/https:\/\/drive\.google\.com[^\s]*/);
+            html += `<td><div class="action-btns">
+                <input type="file" style="display:none" id="f-${i}" onchange="doUp(${i})">
+                <button class="btn btn-xs btn-primary p-0" onclick="document.getElementById('f-${i}').click()">คัดเลือก</button>
+                ${fileLink ? `<button class="btn btn-xs btn-info p-0" onclick="window.open('${fileLink[0]}')">ดู</button>` : ''}
+            </div></td></tr>`;
         }
-        html += `</tbody></table>`;
-        document.getElementById('table-view').innerHTML = html;
-        
-        // อัปเดตฟิลเตอร์
-        const fMonth = document.getElementById('month-q');
-        fMonth.innerHTML = '<option value="">-- เดือน --</option>';
-        head.forEach((h, i) => { if(h.includes('ตค') || h.includes('มค')) fMonth.add(new Option(h, i)); });
-        
-        const fFreq = document.getElementById('freq-q');
-        fFreq.innerHTML = '<option value="">-- ความถี่ --</option>';
-        [...new Set(data.slice(1).map(r => r[freqIdx]))].filter(String).forEach(v => fFreq.add(new Option(v, v)));
+        document.getElementById('table-view').innerHTML = html + `</tbody></table>`;
     }
 
-    function updateData(r, c, v) { cachedData[r][c] = v; }
-
-    function applyFilters() {
-        const q = document.getElementById('search-q').value.toLowerCase();
-        const freq = document.getElementById('freq-q').value;
-        const rows = document.querySelectorAll("#kpi-table tbody tr");
-        rows.forEach(r => {
-            const txt = r.innerText.toLowerCase();
-            const matchQ = txt.includes(q);
-            const matchFreq = freq === "" || txt.includes(freq.toLowerCase());
-            r.style.display = (matchQ && matchFreq) ? "" : "none";
-        });
-    }
+    function upd(r, c, v) { master[r][c] = v; }
 
     function saveData() {
-        fetch(API_URI, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: cachedData.slice(1) }) })
-        .then(() => alert("✅ ส่งข้อมูลสำเร็จ"));
+        fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: currentSheet, data: master.slice(1) }) })
+        .then(() => alert("ส่งข้อมูลบันทึกแล้ว"));
     }
 
-    async function doUpload(input, rIdx) {
-        const file = input.files[0];
+    function doUp(idx) {
+        const file = document.getElementById(`f-${idx}`).files[0];
         const reader = new FileReader();
-        reader.onload = async (e) => {
-            const res = await fetch(API_URI, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
-            const url = await res.text();
-            cachedData[rIdx][cachedData[0].indexOf('วิเคราะห์')] += ` \n📎 ไฟล์: ${url}`;
-            alert("📁 แนบไฟล์สำเร็จ");
-            fetchData();
+        reader.onload = (e) => {
+            fetch(API, { method: "POST", body: JSON.stringify({ action: 'upload', file: e.target.result, name: file.name }) })
+            .then(r => r.text()).then(url => {
+                master[idx][master[0].indexOf('วิเคราะห์')] += ` \nLink: ${url}`;
+                alert("อัปโหลดสำเร็จ");
+                fetchData();
+            });
         };
         reader.readAsDataURL(file);
     }
 
-    function exportToExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('kpi-table')), `${activeSheet}.xlsx`); }
-    function doCapture() { html2canvas(document.getElementById('capture-zone')).then(cv => { let a = document.createElement('a'); a.download = 'Capture.png'; a.href = cv.toDataURL(); a.click(); }); }
+    function exportToExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('table-view')), `${currentSheet}.xlsx`); }
 </script>
 </body>
 </html>
