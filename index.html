@@ -35,15 +35,17 @@
         .filter-bar { background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
         .table-wrapper { flex: 1; overflow: auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        table { border-collapse: collapse; width: max-content; min-width: 100%; table-layout: auto; }
         
+        /* ปรับขนาดคอลัมน์ให้พอดีเนื้อหา */
+        table { border-collapse: collapse; width: max-content; min-width: 100%; table-layout: auto; }
         th { background: #E2E8F0 !important; position: sticky; top: 0; z-index: 10; padding: 8px; border: 1px solid #CBD5E1; text-align: left; font-weight: 600; white-space: nowrap; }
         td { border: 1px solid #CBD5E1; padding: 6px; vertical-align: top; text-align: left; background: white; white-space: nowrap; }
         
         .empty-cell { background-color: #FFFFE0 !important; }
         .alert-high { color: var(--danger) !important; font-weight: bold; }
         
-        .wrap-col { min-width: 200px; max-width: 350px; white-space: pre-wrap !important; word-wrap: break-word; line-height: 1.5; }
+        /* บังคับ Wrap เฉพาะคอลัมน์ที่ยาวๆ */
+        .wrap-col { min-width: 250px; max-width: 350px; white-space: pre-wrap !important; word-wrap: break-word; line-height: 1.5; }
         
         input[type="text"] { border: 1px solid transparent; width: 100%; min-width: 40px; font-size: 11px; padding: 2px; }
         input[type="text"]:focus { border-bottom: 1px solid var(--accent); outline: none; background: #fff; }
@@ -144,7 +146,13 @@
         document.getElementById('outcome-view').innerHTML = '<h5 class="col-12 text-center mt-5">กำลังวิเคราะห์ข้อมูลกราฟ...</h5>';
         fetch(`${API}?action=getData&sheetName=NQA`).then(res => res.json()).then(data => {
             masterData = data;
-            renderOutcome(data);
+            // สร้างคอลัมน์ไฟล์แนบเผื่อไว้สำหรับกราฟ หากยังไม่มี
+            let fileColIdx = masterData[0].findIndex(h => String(h).trim() === 'ไฟล์แนบ');
+            if(fileColIdx === -1) {
+                masterData[0].push('ไฟล์แนบ');
+                for(let r=1; r<masterData.length; r++) masterData[r].push('');
+            }
+            renderOutcome(masterData);
         });
     }
 
@@ -152,7 +160,15 @@
         document.getElementById('table-render').innerHTML = '<h5 class="text-center mt-5">กำลังโหลดข้อมูล...</h5>';
         fetch(`${API}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
             masterData = data;
-            renderTable(data);
+            
+            // ตรวจสอบและสร้างคอลัมน์ "ไฟล์แนบ" อัตโนมัติหากยังไม่มี
+            let fileColIdx = masterData[0].findIndex(h => String(h).trim() === 'ไฟล์แนบ');
+            if(fileColIdx === -1) {
+                masterData[0].push('ไฟล์แนบ');
+                for(let r=1; r<masterData.length; r++) masterData[r].push('');
+            }
+            
+            renderTable(masterData);
         });
     }
 
@@ -160,7 +176,7 @@
         if(!data.length) return;
         const rawHead = data[0];
         
-        const excludeWords = ['หาร', 'หมายเหตุ', 'รหัสข้อมูล', 'รหัส', 'ข้อมูล', 'ไฟล์แนบ']; // ซ่อน 'ไฟล์แนบ' จากคอลัมน์ปกติ เพื่อนำมาสร้างปุ่ม
+        const excludeWords = ['หาร', 'หมายเหตุ', 'รหัสข้อมูล', 'รหัส', 'ข้อมูล', 'ไฟล์แนบ'];
         let colIndices = [];
         
         if(activeSheet === 'IC') {
@@ -177,13 +193,12 @@
         }
 
         const targetIdx = rawHead.findIndex(h => String(h).includes('เป้าหมาย') || String(h).includes('เกณฑ์'));
-        const freqIdx = rawHead.findIndex(h => String(h) === 'ความถี่');
-        const anaIdx = rawHead.findIndex(h => String(h) === 'วิเคราะห์');
-        const fileColIdx = rawHead.findIndex(h => String(h).trim() === 'ไฟล์แนบ'); // หาคอลัมน์ 'ไฟล์แนบ'
+        const freqIdx = rawHead.findIndex(h => String(h).trim() === 'ความถี่');
+        const fileColIdx = rawHead.findIndex(h => String(h).trim() === 'ไฟล์แนบ');
 
         let html = `<table><thead><tr>`;
         colIndices.forEach(i => html += `<th>${rawHead[i]}</th>`);
-        html += `<th>จัดการไฟล์/หลักฐาน</th></tr></thead><tbody>`;
+        html += `<th>จัดการไฟล์แนบ</th></tr></thead><tbody>`;
 
         for(let r=1; r<data.length; r++) {
             html += `<tr>`;
@@ -197,26 +212,24 @@
                 let alertClass = (isNum && targetIdx !== -1 && cellData > parseFloat(data[r][targetIdx] || 9999)) ? "alert-high" : "";
                 
                 let isReadOnly = (activeSheet === 'NQA' && headerName !== 'วิเคราะห์');
-                let wrapClass = (headerName.includes('ตัวชี้วัด') || headerName.includes('ข้อมูล')) ? "wrap-col" : "";
+                let wrapClass = (headerName.includes('ตัวชี้วัด') || headerName.includes('ข้อมูล') || headerName === 'วิเคราะห์') ? "wrap-col" : "";
 
                 if(headerName === 'วิเคราะห์') {
-                    html += `<td><textarea onchange="updateM(${r},${c},this.value)">${display}</textarea></td>`;
+                    html += `<td><textarea class="${wrapClass}" onchange="updateM(${r},${c},this.value)">${display}</textarea></td>`;
                 } else {
                     html += `<td class="${wrapClass} ${emptyClass}">${isReadOnly ? `<span class="${alertClass}">${display}</span>` : `<input type="text" class="${alertClass}" value="${display}" onchange="updateM(${r},${c},this.value)">`}</td>`;
                 }
             });
             
-            // ดึงลิงก์จากคอลัมน์ 'ไฟล์แนบ' (ถ้ามี) ถ้าไม่มีให้ดึงจาก 'วิเคราะห์' สำรองไว้
-            let rawLink = (fileColIdx !== -1 && data[r][fileColIdx]) ? String(data[r][fileColIdx]) : String(data[r][anaIdx] || "");
-            let fileLink = rawLink.match(/https?:\/\/[^\s]+/);
-            
-            let btnOpen = fileLink ? `<button class="btn btn-primary btn-file" onclick="window.open('${fileLink[0]}')"><i class="bi bi-box-arrow-up-right"></i> เปิดไฟล์</button>` : `<button class="btn btn-secondary btn-file" disabled>ไม่มีไฟล์</button>`;
+            // ใช้คอลัมน์ "ไฟล์แนบ" ในการเก็บลิงก์
+            let fileLink = String(data[r][fileColIdx] || "").match(/https?:\/\/[^\s]+/);
+            let btnOpen = fileLink ? `<button class="btn btn-primary btn-file" onclick="window.open('${fileLink[0]}')"><i class="bi bi-eye-fill"></i> ดูไฟล์</button>` : `<button class="btn btn-secondary btn-file" disabled>ไม่มีไฟล์</button>`;
             
             html += `<td class="text-center">
                         <div class="file-actions">
                             ${btnOpen}
                             <label class="btn btn-outline-dark btn-file mb-0 cursor-pointer">
-                                <i class="bi bi-cloud-upload"></i> อัพโหลด/แก้ไข <input type="file" hidden onchange="doUpload(this, ${r}, ${fileColIdx}, ${anaIdx})">
+                                <i class="bi bi-cloud-upload"></i> อัพโหลด <input type="file" hidden onchange="doUpload(this, ${r}, ${fileColIdx})">
                             </label>
                         </div>
                      </td></tr>`;
@@ -243,30 +256,25 @@
     }
 
     function saveData() {
-        fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: masterData.slice(1) }) })
+        // ส่งข้อมูลแบบรวมคอลัมน์ใหม่ (ไฟล์แนบ) ไปบันทึกทับทั้งชีท
+        fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: masterData }) })
         .then(() => alert("✅ ข้อมูลถูกส่งไปบันทึกแล้ว"));
     }
 
-    async function doUpload(input, rIdx, fileColIdx, anaIdx) {
+    async function doUpload(input, rIdx, fileColIdx) {
         const file = input.files[0];
+        if(!file) return;
         const reader = new FileReader();
         reader.onload = async (e) => {
-            document.body.style.cursor = 'wait'; // เปลี่ยนเคอร์เซอร์แสดงว่ากำลังโหลด
+            document.body.style.cursor = 'wait'; 
             const res = await fetch(API, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
             const url = await res.text();
-            
-            // ถ้าระบุคอลัมน์ 'ไฟล์แนบ' ไว้ใน Google Sheets ให้เซฟลิงก์ลงคอลัมน์นั้น
-            if (fileColIdx !== -1) {
-                masterData[rIdx][fileColIdx] = url;
-            } else if (anaIdx !== -1) {
-                // ถ้าไม่มีคอลัมน์ไฟล์แนบ ให้บันทึกต่อท้ายช่องวิเคราะห์
-                masterData[rIdx][anaIdx] += ` \n📎 ${url}`;
-            }
             
             document.body.style.cursor = 'default';
             if(url.includes("Error")) {
                 alert(url);
             } else {
+                masterData[rIdx][fileColIdx] = url;
                 alert("📁 อัพโหลดไฟล์สำเร็จแล้ว กรุณากดบันทึกข้อมูลด้านบน");
                 if(activeSheet !== 'NQA') fetchData(); 
             }
@@ -278,12 +286,12 @@
         const head = data[0];
         const nameIdx = head.findIndex(h => String(h).trim() === 'รายการตัวชี้วัด');
         const targetIdx = head.findIndex(h => String(h).includes('เป้าหมาย'));
-        const anaIdx = head.findIndex(h => String(h) === 'วิเคราะห์');
+        const anaIdx = head.findIndex(h => String(h).trim() === 'วิเคราะห์');
         const fileColIdx = head.findIndex(h => String(h).trim() === 'ไฟล์แนบ');
-        const c66 = head.findIndex(h => String(h) === '66');
-        const c67 = head.findIndex(h => String(h) === '67');
-        const c68 = head.findIndex(h => String(h) === '68');
-        const c69 = head.findIndex(h => String(h) === '2569');
+        const c66 = head.findIndex(h => String(h).trim() === '66');
+        const c67 = head.findIndex(h => String(h).trim() === '67');
+        const c68 = head.findIndex(h => String(h).trim() === '68');
+        const c69 = head.findIndex(h => String(h).trim() === '2569');
         
         document.getElementById('outcome-view').innerHTML = "";
         charts.forEach(c => c.destroy()); charts = [];
@@ -293,6 +301,9 @@
             if(rowIdx === -1) return;
             let row = data[rowIdx];
             
+            let fileLink = String(row[fileColIdx] || "").match(/https?:\/\/[^\s]+/);
+            let btnOpen = fileLink ? `<button class="btn btn-sm btn-primary" onclick="window.open('${fileLink[0]}')"><i class="bi bi-eye"></i> ดูไฟล์</button>` : `<button class="btn btn-sm btn-secondary" disabled>ไม่มีไฟล์</button>`;
+
             let html = `
             <div class="chart-card" id="card-out-${index}">
                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -302,7 +313,10 @@
                 <div class="chart-container"><canvas id="cv-${index}"></canvas></div>
                 <textarea class="mt-2" placeholder="เพิ่มบทวิเคราะห์กราฟนี้..." onchange="updateM(${rowIdx}, ${anaIdx}, this.value)">${row[anaIdx]||""}</textarea>
                 <div class="d-flex gap-2 mt-2 align-items-center justify-content-between">
-                    <label class="btn btn-sm btn-outline-dark mb-0"><i class="bi bi-paperclip"></i> อัพโหลดไฟล์<input type="file" hidden onchange="doUpload(this, ${rowIdx}, ${fileColIdx}, ${anaIdx})"></label>
+                    <div class="d-flex gap-2">
+                        ${btnOpen}
+                        <label class="btn btn-sm btn-outline-dark mb-0"><i class="bi bi-cloud-upload"></i> อัพโหลดไฟล์<input type="file" hidden onchange="doUpload(this, ${rowIdx}, ${fileColIdx})"></label>
+                    </div>
                 </div>
             </div>`;
             document.getElementById('outcome-view').innerHTML += html;
