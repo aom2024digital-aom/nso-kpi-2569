@@ -13,15 +13,12 @@
         :root { --primary: #2C3E50; --accent: #1ABC9C; --danger: #E74C3C; --bg: #F4F7F6; }
         body { font-family: 'Noto Sans Thai', sans-serif; background: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 11px; }
         
-        /* Top Navigation */
         .topbar { background: white; height: 60px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; z-index: 100; }
         .logo-box { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .nurse-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
         
-        /* Main Container */
         .main-container { flex: 1; overflow-y: auto; padding: 20px; }
         
-        /* Home Card Grid */
         #home-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
         .menu-card { border-radius: 15px; padding: 20px; color: white; cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .menu-card:hover { transform: translateY(-5px); }
@@ -34,32 +31,29 @@
         .card-ic { background: linear-gradient(135deg, #F6D365 0%, #FDA085 100%); color: #333; }
         .card-outcome { background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); }
 
-        /* Detail View & Filter */
         #detail-view { display: none; height: 100%; flex-direction: column; }
         .filter-bar { background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        /* Table Formatting (Scroll & Wrap) */
         .table-wrapper { flex: 1; overflow: auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         table { border-collapse: collapse; width: max-content; min-width: 100%; table-layout: auto; }
-        th { background: #E2E8F0 !important; position: sticky; top: 0; z-index: 10; padding: 8px; border: 1px solid #CBD5E1; text-align: left; font-weight: 600; white-space: nowrap; }
-        td { border: 1px solid #CBD5E1; padding: 6px; vertical-align: top; text-align: left; background: white; }
         
-        /* The requested Yellow Empty & Red Alert */
+        /* ปรับคอลัมน์ให้พอดีเนื้อหา โดยใช้ white-space: nowrap ป้องกันการบีบ */
+        th { background: #E2E8F0 !important; position: sticky; top: 0; z-index: 10; padding: 8px; border: 1px solid #CBD5E1; text-align: left; font-weight: 600; white-space: nowrap; }
+        td { border: 1px solid #CBD5E1; padding: 6px; vertical-align: top; text-align: left; background: white; white-space: nowrap; }
+        
         .empty-cell { background-color: #FFFFE0 !important; }
         .alert-high { color: var(--danger) !important; font-weight: bold; }
         
-        /* Force Wrap Text for KPIs */
-        .wrap-col { min-width: 250px; max-width: 350px; white-space: pre-wrap !important; word-wrap: break-word; line-height: 1.5; }
+        /* ยกเว้นคอลัมน์เป้าหมายให้ตัดคำได้ */
+        .wrap-col { min-width: 200px; max-width: 350px; white-space: pre-wrap !important; word-wrap: break-word; line-height: 1.5; }
         
-        input[type="text"] { border: 1px solid transparent; width: 100%; font-size: 11px; padding: 2px; }
+        input[type="text"] { border: 1px solid transparent; width: 100%; min-width: 40px; font-size: 11px; padding: 2px; }
         input[type="text"]:focus { border-bottom: 1px solid var(--accent); outline: none; background: #fff; }
-        textarea { width: 100%; min-height: 60px; font-size: 11px; padding: 4px; border: 1px solid #CBD5E1; border-radius: 4px; resize: vertical; }
+        textarea { width: 100%; min-width: 150px; min-height: 60px; font-size: 11px; padding: 4px; border: 1px solid #CBD5E1; border-radius: 4px; resize: vertical; white-space: pre-wrap; }
         
-        /* File Buttons */
         .file-actions { display: flex; flex-direction: column; gap: 4px; min-width: 90px; }
         .btn-file { font-size: 9px; padding: 4px 8px; width: 100%; font-weight: bold; }
         
-        /* Nursing Outcome Cards */
         #outcome-view { display: none; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; padding-bottom: 30px; }
         .chart-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .chart-container { height: 250px; width: 100%; margin-bottom: 15px; }
@@ -73,6 +67,7 @@
         <h5 class="mb-0 fw-bold text-primary">NSO SATUN 2569</h5>
     </div>
     <div id="action-btns" class="d-none gap-2">
+        <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="showHome()"><i class="bi bi-house-door-fill"></i> หน้าหลัก</button>
         <button class="btn btn-sm btn-primary fw-bold" onclick="saveData()"><i class="bi bi-save"></i> บันทึกข้อมูล</button>
         <button class="btn btn-sm btn-dark" onclick="fetchData()"><i class="bi bi-arrow-repeat"></i> ดึงใหม่</button>
         <button class="btn btn-sm btn-success" onclick="exportExcel()"><i class="bi bi-file-excel"></i> Export</button>
@@ -81,10 +76,8 @@
 </div>
 
 <div class="main-container">
-    <!-- Home Menu View -->
     <div id="home-view"></div>
 
-    <!-- Detail Table View -->
     <div id="detail-view">
         <h5 id="sheet-title" class="fw-bold mb-3 text-primary"></h5>
         <div class="filter-bar">
@@ -98,7 +91,6 @@
         </div>
     </div>
 
-    <!-- Nursing Outcome View -->
     <div id="outcome-view"></div>
 </div>
 
@@ -145,11 +137,11 @@
     }
 
     function loadOutcome() {
-        activeSheet = "NQA"; // Fetch from NQA
+        activeSheet = "NQA"; 
         document.getElementById('home-view').style.display = 'none';
         document.getElementById('detail-view').style.display = 'none';
         document.getElementById('outcome-view').style.display = 'grid';
-        document.getElementById('action-btns').classList.add('d-none'); // Hide global save for outcome
+        document.getElementById('action-btns').classList.remove('d-none');
         
         document.getElementById('outcome-view').innerHTML = '<h5 class="col-12 text-center mt-5">กำลังวิเคราะห์ข้อมูลกราฟ...</h5>';
         fetch(`${API}?action=getData&sheetName=NQA`).then(res => res.json()).then(data => {
@@ -170,21 +162,25 @@
         if(!data.length) return;
         const rawHead = data[0];
         
-        // กรองคอลัมน์ที่ไม่ต้องการ
         const excludeWords = ['หาร', 'หมายเหตุ', 'รหัสข้อมูล', 'รหัส', 'ข้อมูล'];
         let colIndices = [];
         
-        // โครงสร้าง IC แบบบังคับ
         if(activeSheet === 'IC') {
             const icTemplate = ['ตำแหน่ง','เกณฑ์','ตัวตั้งตัวหาร','63','64','65','66','67','68','ต.ค.-68','พ.ย.-68','ธ.ค.-68','มค.69','กพ','มีค','เมย','พค','มิย','กค','สค','กย','สรุป','วิเคราะห์'];
-            icTemplate.forEach(t => { const idx = rawHead.indexOf(t); if(idx !== -1) colIndices.push(idx); });
+            icTemplate.forEach(t => { 
+                const idx = rawHead.findIndex(h => String(h).trim() === t); 
+                if(idx !== -1) colIndices.push(idx); 
+            });
         } else {
-            rawHead.forEach((h, i) => { if(!excludeWords.includes(h.trim()) && h.trim() !== '') colIndices.push(i); });
+            rawHead.forEach((h, i) => { 
+                let headerStr = h !== null && h !== undefined ? String(h).trim() : "";
+                if(!excludeWords.includes(headerStr) && headerStr !== '') colIndices.push(i); 
+            });
         }
 
-        const targetIdx = rawHead.findIndex(h => h.includes('เป้าหมาย') || h.includes('เกณฑ์'));
-        const freqIdx = rawHead.indexOf('ความถี่');
-        const anaIdx = rawHead.indexOf('วิเคราะห์');
+        const targetIdx = rawHead.findIndex(h => String(h).includes('เป้าหมาย') || String(h).includes('เกณฑ์'));
+        const freqIdx = rawHead.findIndex(h => String(h) === 'ความถี่');
+        const anaIdx = rawHead.findIndex(h => String(h) === 'วิเคราะห์');
 
         let html = `<table><thead><tr>`;
         colIndices.forEach(i => html += `<th>${rawHead[i]}</th>`);
@@ -194,15 +190,13 @@
             html += `<tr>`;
             colIndices.forEach(c => {
                 let cellData = data[r][c];
-                let headerName = rawHead[c];
+                let headerName = String(rawHead[c]).trim();
                 let isNum = typeof cellData === 'number';
                 let display = isNum ? cellData.toFixed(2) : (cellData || "");
                 
-                // Logic Yellow (ไม่มีข้อมูล) & Red (เกินเป้าหมาย)
                 let emptyClass = (display === "") ? "empty-cell" : "";
                 let alertClass = (isNum && targetIdx !== -1 && cellData > parseFloat(data[r][targetIdx] || 9999)) ? "alert-high" : "";
                 
-                // Readonly สำหรับ NQA
                 let isReadOnly = (activeSheet === 'NQA' && headerName !== 'วิเคราะห์');
                 let wrapClass = (headerName.includes('ตัวชี้วัด') || headerName.includes('ข้อมูล')) ? "wrap-col" : "";
 
@@ -213,7 +207,6 @@
                 }
             });
             
-            // ปุ่มจัดการไฟล์
             let fileLink = (data[r][anaIdx] || "").match(/https?:\/\/[^\s]+/);
             let btnOpen = fileLink ? `<button class="btn btn-primary btn-file" onclick="window.open('${fileLink[0]}')"><i class="bi bi-box-arrow-up-right"></i> เปิดไฟล์</button>` : `<button class="btn btn-secondary btn-file" disabled>ไม่มีไฟล์</button>`;
             
@@ -229,9 +222,8 @@
         html += `</tbody></table>`;
         document.getElementById('table-render').innerHTML = html;
         
-        // Update Filters
         const fM = document.getElementById('flt-month'); fM.innerHTML = '<option value="">-- เดือน --</option>';
-        rawHead.forEach((h,i) => { if(h.includes('ตค') || h.includes('มค') || h.includes('-68')) fM.add(new Option(h, i)); });
+        rawHead.forEach((h,i) => { let hStr = String(h); if(hStr.includes('ตค') || hStr.includes('มค') || hStr.includes('-68')) fM.add(new Option(hStr, i)); });
         
         const fF = document.getElementById('flt-freq'); fF.innerHTML = '<option value="">-- ความถี่ --</option>';
         if(freqIdx !== -1) [...new Set(data.slice(1).map(x => x[freqIdx]))].filter(String).forEach(v => fF.add(new Option(v, v)));
@@ -261,24 +253,26 @@
             const url = await res.text();
             masterData[rIdx][cIdx] += ` \n📎 ${url}`;
             alert("📁 อัพโหลดไฟล์สำเร็จแล้ว กรุณากดบันทึกข้อมูลด้านบน");
-            if(activeSheet !== 'NQA') fetchData(); // Refresh if not in outcome mode
+            if(activeSheet !== 'NQA') fetchData(); 
         };
         reader.readAsDataURL(file);
     }
 
     function renderOutcome(data) {
         const head = data[0];
-        const nameIdx = head.indexOf('รายการตัวชี้วัด');
-        const targetIdx = head.indexOf('เป้าหมาย');
-        const anaIdx = head.indexOf('วิเคราะห์');
-        const c66 = head.indexOf('66'), c67 = head.indexOf('67'), c68 = head.indexOf('68'), c69 = head.indexOf('2569');
+        const nameIdx = head.findIndex(h => String(h).trim() === 'รายการตัวชี้วัด');
+        const targetIdx = head.findIndex(h => String(h).includes('เป้าหมาย'));
+        const anaIdx = head.findIndex(h => String(h) === 'วิเคราะห์');
+        const c66 = head.findIndex(h => String(h) === '66');
+        const c67 = head.findIndex(h => String(h) === '67');
+        const c68 = head.findIndex(h => String(h) === '68');
+        const c69 = head.findIndex(h => String(h) === '2569');
         
         document.getElementById('outcome-view').innerHTML = "";
         charts.forEach(c => c.destroy()); charts = [];
 
         OUTCOME_KPIS.forEach((kpiName, index) => {
-            // Find row in NQA
-            let rowIdx = data.findIndex((r, i) => i > 0 && r[nameIdx] && r[nameIdx].toString().includes(kpiName.split(" ")[0]));
+            let rowIdx = data.findIndex((r, i) => i > 0 && r[nameIdx] && String(r[nameIdx]).includes(kpiName.split(" ")[0]));
             if(rowIdx === -1) return;
             let row = data[rowIdx];
             
@@ -292,12 +286,10 @@
                 <textarea class="mt-2" placeholder="เพิ่มบทวิเคราะห์กราฟนี้..." onchange="updateM(${rowIdx}, ${anaIdx}, this.value)">${row[anaIdx]||""}</textarea>
                 <div class="d-flex gap-2 mt-2 align-items-center justify-content-between">
                     <label class="btn btn-sm btn-outline-dark mb-0"><i class="bi bi-paperclip"></i> อัพโหลดไฟล์<input type="file" hidden onchange="doUpload(this, ${rowIdx}, ${anaIdx})"></label>
-                    <button class="btn btn-sm btn-success px-4" onclick="saveData()"><i class="bi bi-save"></i> บันทึก</button>
                 </div>
             </div>`;
             document.getElementById('outcome-view').innerHTML += html;
             
-            // Draw Chart
             setTimeout(() => {
                 let ctx = document.getElementById(`cv-${index}`).getContext('2d');
                 let target = parseFloat(row[targetIdx]) || 0;
