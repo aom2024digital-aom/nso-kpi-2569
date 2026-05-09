@@ -37,14 +37,12 @@
         .table-wrapper { flex: 1; overflow: auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         table { border-collapse: collapse; width: max-content; min-width: 100%; table-layout: auto; }
         
-        /* ปรับคอลัมน์ให้พอดีเนื้อหา โดยใช้ white-space: nowrap ป้องกันการบีบ */
         th { background: #E2E8F0 !important; position: sticky; top: 0; z-index: 10; padding: 8px; border: 1px solid #CBD5E1; text-align: left; font-weight: 600; white-space: nowrap; }
         td { border: 1px solid #CBD5E1; padding: 6px; vertical-align: top; text-align: left; background: white; white-space: nowrap; }
         
         .empty-cell { background-color: #FFFFE0 !important; }
         .alert-high { color: var(--danger) !important; font-weight: bold; }
         
-        /* ยกเว้นคอลัมน์เป้าหมายให้ตัดคำได้ */
         .wrap-col { min-width: 200px; max-width: 350px; white-space: pre-wrap !important; word-wrap: break-word; line-height: 1.5; }
         
         input[type="text"] { border: 1px solid transparent; width: 100%; min-width: 40px; font-size: 11px; padding: 2px; }
@@ -162,7 +160,7 @@
         if(!data.length) return;
         const rawHead = data[0];
         
-        const excludeWords = ['หาร', 'หมายเหตุ', 'รหัสข้อมูล', 'รหัส', 'ข้อมูล'];
+        const excludeWords = ['หาร', 'หมายเหตุ', 'รหัสข้อมูล', 'รหัส', 'ข้อมูล', 'ไฟล์แนบ']; // ซ่อน 'ไฟล์แนบ' จากคอลัมน์ปกติ เพื่อนำมาสร้างปุ่ม
         let colIndices = [];
         
         if(activeSheet === 'IC') {
@@ -181,6 +179,7 @@
         const targetIdx = rawHead.findIndex(h => String(h).includes('เป้าหมาย') || String(h).includes('เกณฑ์'));
         const freqIdx = rawHead.findIndex(h => String(h) === 'ความถี่');
         const anaIdx = rawHead.findIndex(h => String(h) === 'วิเคราะห์');
+        const fileColIdx = rawHead.findIndex(h => String(h).trim() === 'ไฟล์แนบ'); // หาคอลัมน์ 'ไฟล์แนบ'
 
         let html = `<table><thead><tr>`;
         colIndices.forEach(i => html += `<th>${rawHead[i]}</th>`);
@@ -207,14 +206,17 @@
                 }
             });
             
-            let fileLink = (data[r][anaIdx] || "").match(/https?:\/\/[^\s]+/);
+            // ดึงลิงก์จากคอลัมน์ 'ไฟล์แนบ' (ถ้ามี) ถ้าไม่มีให้ดึงจาก 'วิเคราะห์' สำรองไว้
+            let rawLink = (fileColIdx !== -1 && data[r][fileColIdx]) ? String(data[r][fileColIdx]) : String(data[r][anaIdx] || "");
+            let fileLink = rawLink.match(/https?:\/\/[^\s]+/);
+            
             let btnOpen = fileLink ? `<button class="btn btn-primary btn-file" onclick="window.open('${fileLink[0]}')"><i class="bi bi-box-arrow-up-right"></i> เปิดไฟล์</button>` : `<button class="btn btn-secondary btn-file" disabled>ไม่มีไฟล์</button>`;
             
             html += `<td class="text-center">
                         <div class="file-actions">
                             ${btnOpen}
                             <label class="btn btn-outline-dark btn-file mb-0 cursor-pointer">
-                                <i class="bi bi-cloud-upload"></i> อัพโหลด/แก้ไข <input type="file" hidden onchange="doUpload(this, ${r}, ${anaIdx})">
+                                <i class="bi bi-cloud-upload"></i> อัพโหลด/แก้ไข <input type="file" hidden onchange="doUpload(this, ${r}, ${fileColIdx}, ${anaIdx})">
                             </label>
                         </div>
                      </td></tr>`;
@@ -245,15 +247,29 @@
         .then(() => alert("✅ ข้อมูลถูกส่งไปบันทึกแล้ว"));
     }
 
-    async function doUpload(input, rIdx, cIdx) {
+    async function doUpload(input, rIdx, fileColIdx, anaIdx) {
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = async (e) => {
+            document.body.style.cursor = 'wait'; // เปลี่ยนเคอร์เซอร์แสดงว่ากำลังโหลด
             const res = await fetch(API, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
             const url = await res.text();
-            masterData[rIdx][cIdx] += ` \n📎 ${url}`;
-            alert("📁 อัพโหลดไฟล์สำเร็จแล้ว กรุณากดบันทึกข้อมูลด้านบน");
-            if(activeSheet !== 'NQA') fetchData(); 
+            
+            // ถ้าระบุคอลัมน์ 'ไฟล์แนบ' ไว้ใน Google Sheets ให้เซฟลิงก์ลงคอลัมน์นั้น
+            if (fileColIdx !== -1) {
+                masterData[rIdx][fileColIdx] = url;
+            } else if (anaIdx !== -1) {
+                // ถ้าไม่มีคอลัมน์ไฟล์แนบ ให้บันทึกต่อท้ายช่องวิเคราะห์
+                masterData[rIdx][anaIdx] += ` \n📎 ${url}`;
+            }
+            
+            document.body.style.cursor = 'default';
+            if(url.includes("Error")) {
+                alert(url);
+            } else {
+                alert("📁 อัพโหลดไฟล์สำเร็จแล้ว กรุณากดบันทึกข้อมูลด้านบน");
+                if(activeSheet !== 'NQA') fetchData(); 
+            }
         };
         reader.readAsDataURL(file);
     }
@@ -263,6 +279,7 @@
         const nameIdx = head.findIndex(h => String(h).trim() === 'รายการตัวชี้วัด');
         const targetIdx = head.findIndex(h => String(h).includes('เป้าหมาย'));
         const anaIdx = head.findIndex(h => String(h) === 'วิเคราะห์');
+        const fileColIdx = head.findIndex(h => String(h).trim() === 'ไฟล์แนบ');
         const c66 = head.findIndex(h => String(h) === '66');
         const c67 = head.findIndex(h => String(h) === '67');
         const c68 = head.findIndex(h => String(h) === '68');
@@ -285,7 +302,7 @@
                 <div class="chart-container"><canvas id="cv-${index}"></canvas></div>
                 <textarea class="mt-2" placeholder="เพิ่มบทวิเคราะห์กราฟนี้..." onchange="updateM(${rowIdx}, ${anaIdx}, this.value)">${row[anaIdx]||""}</textarea>
                 <div class="d-flex gap-2 mt-2 align-items-center justify-content-between">
-                    <label class="btn btn-sm btn-outline-dark mb-0"><i class="bi bi-paperclip"></i> อัพโหลดไฟล์<input type="file" hidden onchange="doUpload(this, ${rowIdx}, ${anaIdx})"></label>
+                    <label class="btn btn-sm btn-outline-dark mb-0"><i class="bi bi-paperclip"></i> อัพโหลดไฟล์<input type="file" hidden onchange="doUpload(this, ${rowIdx}, ${fileColIdx}, ${anaIdx})"></label>
                 </div>
             </div>`;
             document.getElementById('outcome-view').innerHTML += html;
