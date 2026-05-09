@@ -2,90 +2,101 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>NSO SATUN 2569 - Dashboard</title>
+    <title>NSO SATUN KPI 2569</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --primary: #1e293b; --accent: #0284c7; --danger: #dc2626; --bg: #f8fafc; }
-        body { font-family: 'Noto Sans Thai', sans-serif; background: var(--bg); display: flex; height: 100vh; margin: 0; font-size: 11px; overflow: hidden; }
+        :root { --primary: #1e1e2d; --accent: #00A3AD; --danger: #e74c3c; }
+        body { font-family: 'Noto Sans Thai', sans-serif; background: #f4f6f9; display: flex; height: 100vh; margin: 0; font-size: 11px; overflow: hidden; }
         
-        /* Sidebar */
-        .sidebar { width: 220px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-scroll { flex: 1; overflow-y: auto; }
-        .nav-btn { padding: 10px 15px; color: #cbd5e1; cursor: pointer; border-bottom: 1px solid #334155; text-decoration: none; display: block; }
-        .nav-btn:hover, .nav-btn.active { background: #334155; color: white; border-left: 4px solid var(--accent); }
+        .sidebar { width: 230px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; }
+        .sidebar-menu { flex: 1; overflow-y: auto; scrollbar-width: thin; }
+        .nav-btn { padding: 10px 18px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; font-size: 11px; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent); }
 
-        /* Main Layout */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-bar { height: 50px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
-        .content-body { flex: 1; padding: 10px; overflow: hidden; display: flex; flex-direction: column; }
+        .top-nav { height: 50px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+        .content-body { flex: 1; padding: 10px; overflow-y: auto; }
         
-        /* Table Controls */
-        .controls { display: flex; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
-        .table-container { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: auto; flex: 1; }
-        
-        /* Table Styling */
+        .table-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 8px; max-height: 85vh; overflow: auto; }
         table { width: 100%; border-collapse: collapse; table-layout: auto; }
-        th { background: #f1f5f9 !important; position: sticky; top: 0; z-index: 10; padding: 6px; font-weight: 600; text-align: center; border: 1px solid #e2e8f0; }
-        td { border: 1px solid #e2e8f0; padding: 4px; vertical-align: middle; background: white !important; text-align: center; }
         
-        /* Specific Column Widths & Wrap */
-        .wrap-text { white-space: normal !important; min-width: 150px; max-width: 250px; word-wrap: break-word; text-align: left !important; line-height: 1.4; }
-        .analysis-box { width: 220px; min-height: 60px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 10px; padding: 5px; text-align: left; resize: vertical; }
-        .file-input { font-size: 9px; width: 140px; }
+        /* การ Wrap Text และจัดชิดซ้าย-บน ทุกช่อง */
+        th, td { 
+            border: 1px solid #eef2f7; 
+            padding: 6px; 
+            text-align: left !important; 
+            vertical-align: top !important; 
+            white-space: normal !important; 
+            word-wrap: break-word;
+            font-size: 11px;
+            background: white;
+            line-height: 1.4;
+        }
+        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         
-        input[type="text"] { width: 100%; min-width: 40px; border: 1px solid transparent; text-align: center; font-size: 11px; padding: 2px; }
-        input[type="text"]:focus { border: 1px solid var(--accent); outline: none; background: #f0f9ff; }
+        .high-alert { color: var(--danger) !important; font-weight: bold; }
+        input[type="text"] { width: 100%; border: none; background: transparent; text-align: left; font-size: 11px; font-family: inherit; }
+        input[type="text"]:focus { outline: 1px solid var(--accent); background: #fcfcfc; }
         
-        .alert-red { color: var(--danger) !important; font-weight: bold; background-color: #fef2f2 !important; }
-        .d-none-col { display: none !important; }
+        /* ช่องวิเคราะห์ ขยายให้ใหญ่ขึ้น */
+        textarea { width: 100%; min-height: 80px; border: 1px solid #eef2f7; border-radius: 4px; font-size: 11px; padding: 4px; font-family: inherit; resize: vertical; }
+        
+        .file-input { font-size: 9px; width: 130px; }
     </style>
 </head>
 <body>
 
 <nav class="sidebar">
     <div class="p-3 text-center border-bottom border-secondary">
-        <h6 class="fw-bold mb-0 text-white">NSO SATUN 2569</h6>
+        <h6 class="fw-bold mb-0">NSO SATUN 2569</h6>
     </div>
-    <div class="sidebar-scroll">
+    <div class="sidebar-menu">
         <div id="ward-nav-list"></div>
-        <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder2-open"></i> กองการ_68</a>
+        <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>
         <a class="nav-btn" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC (Table Only)</a>
         <a class="nav-btn" onclick="loadTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>
     </div>
 </nav>
 
 <main class="main-content">
-    <div class="top-bar">
+    <div class="top-nav">
         <h6 id="current-title" class="mb-0 text-primary fw-bold">กรุณาเลือกเมนู</h6>
         <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-primary" onclick="saveData()"><i class="bi bi-save"></i> บันทึก</button>
-            <button class="btn btn-sm btn-dark" onclick="fetchData()"><i class="bi bi-arrow-repeat"></i> ดึงข้อมูล</button>
+            <button class="btn btn-sm btn-primary" onclick="saveData()"><i class="bi bi-save"></i> บันทึกข้อมูล</button>
+            <button class="btn btn-sm btn-dark" onclick="fetchData()"><i class="bi bi-arrow-repeat"></i> ดึงข้อมูลล่าสุด</button>
             <button class="btn btn-sm btn-outline-success" onclick="exportExcel()"><i class="bi bi-file-excel"></i> Export</button>
-            <button id="cap-btn" class="btn btn-sm btn-info text-white d-none" onclick="doCapture()"><i class="bi bi-camera"></i> Capture</button>
+            <button id="cap-btn" class="btn btn-sm btn-info text-white" onclick="doCapture()"><i class="bi bi-camera"></i> Capture</button>
         </div>
     </div>
 
     <div class="content-body" id="capture-zone">
-        <div class="controls">
-            <input type="text" id="kpi-search" class="form-control form-control-sm" style="max-width:250px" placeholder="🔍 ค้นหา ตัวชี้วัด/ข้อมูล..." onkeyup="filterRows()">
-            <select id="month-filter" class="form-select form-select-sm" style="max-width:180px" onchange="filterColumns()">
-                <option value="ALL">-- แสดงทุกเดือน --</option>
+        <div class="d-flex gap-2 mb-2">
+            <input type="text" id="kpi-search" class="form-control form-control-sm" style="max-width:220px" placeholder="🔍 ค้นหาตัวชี้วัด..." onkeyup="filterRows()">
+            <select id="month-filter" class="form-select form-select-sm" style="max-width:150px" onchange="filterRows()">
+                <option value="">-- กรองเดือน --</option>
             </select>
         </div>
-        
-        <div id="table-container" class="table-container">
-            <p class="text-center py-5 text-muted">พร้อมใช้งาน กรุณาเลือกเมนูทางซ้ายมือ</p>
+        <div id="table-container" class="table-card">
+            <p class="text-center py-5 text-muted">พร้อมใช้งาน เลือกเมนูเพื่อดึงข้อมูล</p>
         </div>
     </div>
 </main>
 
 <script>
     const API_URI = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
-    let activeSheet = "", cachedData = [];
+    let activeSheet = "", masterData = [];
+
+    // กำหนดคอลัมน์ที่ต้องการให้แสดงผลในแต่ละแท็บ
+    const allowedColumnsMap = {
+        'NQA': ['เป้าหมาย','ความถี่','รายการตัวชี้วัด','66','67','68','ตค.68','พย','ธค','มค.69ลกพ','มีค','ไตรมาส 1','ไตรมาส 2','ไตรมาส 3','ไตรมาส 4','2569','สรุป','วิเคราะห์'],
+        'กองการ_68': ['รหัส','ข้อมูล','ชื่อข้อมูล','ตัวตั้ง','ตัวหาร','ผลลัพธ์','สรุป','วิเคราะห์'],
+        'IC': ['ตำแหน่ง','ตัวตั้งตัวหาร','63','64','65','66','67','68','ต.ค.-68','พ.ย.-68','ธ.ค.-68','มค.69กพ','มีค','เมย','พค','มิย','กค','สค','กย','สรุป','วิเคราะห์']
+    };
+    const wardAllowedCols = ['รายการตัวชี้วัด','เป้าหมาย','ความถี่','ตค.68','พย','ธค','มค.69','กพ','มีค','เมย','พค','มิย','กค','สค','กย','สรุป','วิเคราะห์'];
 
     window.onload = () => {
         fetch(`${API_URI}?action=getWards`).then(res => res.json()).then(wards => {
@@ -98,90 +109,73 @@
     function loadTab(name) {
         activeSheet = name;
         document.getElementById('current-title').innerText = "📍 " + name;
-        document.getElementById('cap-btn').classList.remove('d-none');
         fetchData();
     }
 
     function fetchData() {
-        const container = document.getElementById('table-container');
-        container.innerHTML = '<div class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> กำลังดึงข้อมูล...</div>';
+        document.getElementById('table-container').innerHTML = '<div class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> กำลังดึงข้อมูล...</div>';
         fetch(`${API_URI}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
-            cachedData = data;
+            masterData = data;
             renderTable(data);
-            setupMonthFilter(data[0]);
         });
     }
 
     function renderTable(data) {
         if(!data || data.length === 0) return;
         const head = data[0];
-        let html = `<table id="data-table"><thead><tr>`;
         
-        // Render Headers (ซ่อนคอลัมน์ หาร, หมายเหตุ)
-        head.forEach((h, idx) => {
-            let hideClass = (h === "หาร" || h === "หมายเหตุ") ? "d-none-col" : "";
-            html += `<th class="${hideClass}" data-col="${idx}">${h}</th>`;
+        // ตรวจสอบกฎการดึงคอลัมน์
+        let allowedNames = activeSheet.toLowerCase().startsWith('ward') ? wardAllowedCols : allowedColumnsMap[activeSheet];
+        if(!allowedNames) allowedNames = head; // Fallback ถ้าชื่อไม่ตรง
+
+        // หา Index ที่ตรงกับคอลัมน์ที่อนุญาต
+        let colIndicesToRender = [];
+        head.forEach((colName, idx) => {
+            // Trim space เผื่อชื่อคอลัมน์ใน Sheet มีวรรค
+            if(allowedNames.includes(colName.trim())) {
+                colIndicesToRender.push(idx);
+            }
         });
+
+        const targetIdx = head.findIndex(h => h.includes('เป้าหมาย') || h.includes('เกณฑ์'));
+
+        let html = `<table id="main-table"><thead><tr>`;
+        colIndicesToRender.forEach(idx => html += `<th>${head[idx]}</th>`);
         html += `<th>แนบไฟล์</th></tr></thead><tbody>`;
 
-        const targetIdx = head.indexOf('เป้าหมาย');
-        
-        // Render Rows
         for(let i=1; i<data.length; i++){
             html += `<tr>`;
-            data[i].forEach((cell, idx) => {
-                let colName = head[idx];
-                let isHidden = (colName === "หาร" || colName === "หมายเหตุ") ? "d-none-col" : "";
-                let isWrap = ["รายการตัวชี้วัด", "ข้อมูล", "ชื่อข้อมูล", "ตำแหน่ง"].includes(colName) ? "wrap-text" : "";
-                
-                // Alert Logic (ถ้ามีเป้าหมายและค่าปัจจุบันมากกว่าเป้าหมาย)
-                let targetVal = parseFloat(data[i][targetIdx]);
-                let numVal = parseFloat(cell);
-                let alertClass = (targetIdx !== -1 && !isNaN(targetVal) && !isNaN(numVal) && numVal > targetVal) ? "alert-red" : "";
-                
+            colIndicesToRender.forEach(colIdx => {
+                let colName = head[colIdx].trim();
+                let targetVal = (targetIdx >= 0) ? parseFloat(data[i][targetIdx]) : 999999;
+                let currentVal = parseFloat(data[i][colIdx]);
+                let isAlert = (!isNaN(currentVal) && currentVal > targetVal) ? "high-alert" : "";
                 let isReadOnly = (activeSheet === 'NQA' && colName !== 'วิเคราะห์');
-                let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+                let display = (typeof data[i][colIdx] === 'number') ? data[i][colIdx].toFixed(2) : (data[i][colIdx] || "");
 
                 if(colName === 'วิเคราะห์') {
-                    html += `<td class="${isHidden}"><textarea class="analysis-box" onchange="updateCache(${i},${idx},this.value)">${display}</textarea></td>`;
+                    html += `<td><textarea onchange="updateMaster(${i},${colIdx},this.value)">${display}</textarea></td>`;
                 } else {
-                    html += `<td class="${isHidden} ${isWrap}" data-col="${idx}">`;
-                    if(isReadOnly) {
-                        html += `<span class="${alertClass}">${display}</span>`;
-                    } else {
-                        html += `<input type="text" class="${alertClass}" value="${display}" onchange="updateCache(${i},${idx},this.value)">`;
-                    }
-                    html += `</td>`;
+                    html += `<td>${isReadOnly ? `<span>${display}</span>` : `<input type="text" class="${isAlert}" value="${display}" onchange="updateMaster(${i},${colIdx},this.value)">`}</td>`;
                 }
             });
-            html += `<td class="text-center"><input type="file" class="file-input" onchange="uploadFile(this, ${i})"></td></tr>`;
+            html += `<td><input type="file" class="file-input" onchange="doUpload(this, ${i})"></td></tr>`;
         }
         html += `</tbody></table>`;
         document.getElementById('table-container').innerHTML = html;
+        setupFilters(head, colIndicesToRender);
     }
 
-    function updateCache(r, c, v) { 
-        cachedData[r][c] = v;
-        // Re-evaluate alert color on change
-        const head = cachedData[0];
-        const targetIdx = head.indexOf('เป้าหมาย');
-        if(targetIdx !== -1) {
-            let targetVal = parseFloat(cachedData[r][targetIdx]);
-            let numVal = parseFloat(v);
-            let inputEl = document.querySelector(`#data-table tbody tr:nth-child(${r}) td[data-col="${c}"] input`);
-            if(inputEl) {
-                if(!isNaN(numVal) && numVal > targetVal) inputEl.classList.add('alert-red');
-                else inputEl.classList.remove('alert-red');
-            }
-        }
+    function updateMaster(r, c, v) { 
+        masterData[r][c] = v; // บันทึกทับตัวแปล Master ต้นฉบับเพื่อความสมบูรณ์เวลา Save
     }
 
-    function setupMonthFilter(head) {
+    function setupFilters(head, indices) {
         const sel = document.getElementById('month-filter');
-        sel.innerHTML = '<option value="ALL">-- แสดงทุกเดือน --</option>';
-        const months = ["ตค", "พย", "ธค", "มค", "กพ", "มีค", "เมย", "พค", "มิย", "กค", "สค", "กย", "ต.ค.", "พ.ย.", "ธ.ค."];
-        head.forEach((h, idx) => {
-            if(months.some(m => h.includes(m))) {
+        sel.innerHTML = '<option value="">-- กรองเดือน --</option>';
+        indices.forEach(idx => {
+            let h = head[idx];
+            if(h.includes('ตค') || h.includes('มค') || h.includes('ต.ค.') || h.includes('ไตรมาส')) {
                 sel.add(new Option(h, idx));
             }
         });
@@ -189,65 +183,38 @@
 
     function filterRows() {
         const q = document.getElementById('kpi-search').value.toLowerCase();
-        const rows = document.querySelectorAll("#data-table tbody tr");
+        const rows = document.querySelectorAll("#main-table tbody tr");
         rows.forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none");
     }
 
-    function filterColumns() {
-        const selectedIdx = document.getElementById('month-filter').value;
-        const table = document.getElementById('data-table');
-        const months = ["ตค", "พย", "ธค", "มค", "กพ", "มีค", "เมย", "พค", "มิย", "กค", "สค", "กย", "ต.ค.", "พ.ย.", "ธ.ค."];
-        const head = cachedData[0];
-        
-        for(let i=0; i<head.length; i++) {
-            let isMonthCol = months.some(m => head[i].includes(m));
-            if(!isMonthCol) continue; // ข้ามคอลัมน์ที่ไม่ใช่เดือน
-            
-            let shouldHide = (selectedIdx !== "ALL" && i.toString() !== selectedIdx);
-            
-            // ซ่อน/แสดง Header
-            let th = table.querySelector(`th[data-col="${i}"]`);
-            if(th) th.style.display = shouldHide ? "none" : "";
-            
-            // ซ่อน/แสดง Cell ในแต่ละแถว
-            let trs = table.querySelectorAll("tbody tr");
-            trs.forEach(tr => {
-                let td = tr.querySelector(`td[data-col="${i}"]`);
-                if(td) td.style.display = shouldHide ? "none" : "";
-            });
-        }
-    }
-
     function saveData() {
-        const body = cachedData.slice(1);
+        const body = masterData.slice(1);
         fetch(API_URI, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: body }) })
-        .then(() => alert("✅ ส่งคำสั่งบันทึกสำเร็จ (รออัปเดตใน Sheet 3-5 วินาที)"));
+        .then(() => alert("✅ ส่งคำสั่งบันทึกข้อมูลสำเร็จ"));
     }
 
-    async function uploadFile(input, rIdx) {
-        if(!input.files[0]) return;
+    async function doUpload(input, rIdx) {
+        if(!input.files.length) return;
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = async (e) => {
-            input.disabled = true;
-            alert("กำลังอัปโหลดไฟล์...");
             const res = await fetch(API_URI, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
             const url = await res.text();
             
-            const anaIdx = cachedData[0].indexOf('วิเคราะห์');
-            cachedData[rIdx][anaIdx] += `\n📎 ไฟล์แนบ: ${url}`;
-            input.disabled = false;
-            alert("📁 อัปโหลดสำเร็จ! นำ Link ไปใส่ในช่องวิเคราะห์แล้ว");
-            
-            // Update UI
-            let textarea = document.querySelector(`#data-table tbody tr:nth-child(${rIdx}) .analysis-box`);
-            if(textarea) textarea.value = cachedData[rIdx][anaIdx];
+            const head = masterData[0];
+            let anaIdx = head.findIndex(h => h.trim() === 'วิเคราะห์');
+            if(anaIdx !== -1) {
+                masterData[rIdx][anaIdx] += `\n📎 ไฟล์แนบ: ${url}`;
+                alert("📁 อัปโหลดและแนบ Link ในช่องวิเคราะห์สำเร็จ");
+                // Render ซ้ำเพื่อให้ UI อัปเดตแสดง Link
+                renderTable(masterData);
+            }
         };
         reader.readAsDataURL(file);
     }
 
-    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('data-table')), `${activeSheet}_Data.xlsx`); }
-    function doCapture() { html2canvas(document.getElementById('capture-zone')).then(cv => { let a = document.createElement('a'); a.download = 'Capture.png'; a.href = cv.toDataURL(); a.click(); }); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('main-table')), `${activeSheet}_Export.xlsx`); }
+    function doCapture() { html2canvas(document.getElementById('capture-zone')).then(cv => { let a = document.createElement('a'); a.download = 'ScreenCapture.png'; a.href = cv.toDataURL(); a.click(); }); }
 </script>
 </body>
 </html>
