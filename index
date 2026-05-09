@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>NSO Satun Hospital - KPI Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 280px; background: var(--primary); color: white; display: flex; flex-direction: column; overflow-y: auto; }
+        .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .nav-link-custom { padding: 12px 20px; color: #bdc3c7; cursor: pointer; border-bottom: 1px solid #34495e; transition: 0.2s; text-decoration: none; display: block; }
+        .nav-link-custom:hover, .nav-link-custom.active { background: var(--accent); color: white; }
+        .content-body { flex: 1; padding: 25px; overflow-y: auto; }
+        .table-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        th { background: #f1f3f5 !important; position: sticky; top: 0; z-index: 10; font-size: 12px; }
+        td { font-size: 12px; vertical-align: middle; background: white !important; }
+        input { width: 100%; border: 1px solid transparent; text-align: center; background: transparent; }
+        input:focus { border: 1px solid var(--accent); background: #fff; outline: none; }
+        .chart-container { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <div class="p-4 text-center"><h5>NSO SATUN 2569</h5><small>GitHub Edition</small></div>
+    <div id="ward-list"></div>
+    <a class="nav-link-custom" onclick="loadTab('กองการ_68')"><i class="bi bi-file-earmark-text"></i> กองการ_68</a>
+    <a class="nav-link-custom" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC (Analytics)</a>
+    <a class="nav-link-custom" onclick="loadTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>
+</nav>
+
+<main class="main-area">
+    <div class="p-3 bg-white shadow-sm d-flex justify-content-between align-items-center">
+        <h5 id="current-title" class="mb-0 text-primary">กรุณาเลือกเมนู</h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-primary" onclick="saveData()"><i class="bi bi-save"></i> บันทึกข้อมูล</button>
+            <button class="btn btn-sm btn-dark" onclick="fetchData()"><i class="bi bi-arrow-clockwise"></i> ดึงข้อมูล</button>
+            <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()"><i class="bi bi-file-excel"></i> Export</button>
+            <button id="btn-cap" class="btn btn-sm btn-info text-white d-none" onclick="takeCapture()"><i class="bi bi-camera"></i> Capture</button>
+        </div>
+    </div>
+
+    <div class="content-body" id="capture-area">
+        <div id="table-view" class="table-card overflow-auto" style="max-height: 80vh;">
+            <p class="text-center text-muted">กำลังโหลดระบบ...</p>
+        </div>
+        
+        <div id="ic-analytics" class="d-none">
+            <div class="chart-container shadow-sm"><canvas id="icLineChart"></canvas></div>
+            <div class="mt-4 p-3 bg-white rounded shadow-sm">
+                <h6>สรุปและบทวิเคราะห์</h6>
+                <textarea id="ic-summary-box" class="form-control mb-3" rows="6" placeholder="พิมพ์รายละเอียดที่นี่..."></textarea>
+                <input type="file" class="form-control">
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
+    let currentSheet = "";
+    let myChart = null;
+
+    window.onload = () => {
+        fetch(`${API_URL}?action=getWards`)
+        .then(res => res.json())
+        .then(data => {
+            const html = data.map(w => `<a class="nav-link-custom" onclick="loadTab('${w}')"><i class="bi bi-hospital"></i> ${w}</a>`).join('');
+            document.getElementById('ward-list').innerHTML = html;
+            document.getElementById('table-view').innerHTML = '<p class="text-center">พร้อมใช้งาน เลือกเมนูทางซ้ายมือ</p>';
+        });
+    };
+
+    function loadTab(name) {
+        currentSheet = name;
+        document.getElementById('current-title').innerText = "กำลังใช้งานชีท: " + name;
+        document.getElementById('ic-analytics').classList.add('d-none');
+        document.getElementById('btn-cap').classList.add('d-none');
+        fetchData();
+    }
+
+    function fetchData() {
+        document.getElementById('table-view').innerHTML = '<p class="text-center py-5">กำลังดึงข้อมูลจาก Google Sheets...</p>';
+        fetch(`${API_URL}?action=getData&sheetName=${currentSheet}`)
+        .then(res => res.json())
+        .then(data => {
+            renderTable(data);
+            if(currentSheet === 'IC') renderIC(data);
+        });
+    }
+
+    function renderTable(data) {
+        if(!data.length) return;
+        const headers = data[0];
+        let html = `<table class="table table-bordered" id="dataTable"><thead><tr>`;
+        headers.forEach(h => html += `<th>${h}</th>`);
+        html += `</tr></thead><tbody>`;
+
+        for(let i=1; i<data.length; i++){
+            html += `<tr>`;
+            data[i].forEach((cell, idx) => {
+                let val = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+                let isReadOnly = (currentSheet === 'NQA' && headers[idx] !== 'วิเคราะห์');
+                html += `<td>${isReadOnly ? `<span>${val}</span>` : `<input type="text" value="${val}">`}</td>`;
+            });
+            html += `</tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById('table-view').innerHTML = html;
+    }
+
+    function renderIC(data) {
+        document.getElementById('ic-analytics').classList.remove('d-none');
+        document.getElementById('btn-cap').classList.remove('d-none');
+        const labels = ["63","64","65","66","67","68","ต.ค.-68","พ.ย.-68","ธ.ค.-68","มค.69","กพ","มีค","เมย","พค","มิย","กค","สค","กย"];
+        const rowData = data[1].slice(2, 20).map(v => parseFloat(v) || 0);
+        const target = parseFloat(data[1][1]) || 0;
+
+        if(myChart) myChart.destroy();
+        myChart = new Chart(document.getElementById('icLineChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'ผลลัพธ์', data: rowData, borderColor: '#3498db', tension: 0.3, fill: false },
+                    { label: 'เส้นเกณฑ์', data: Array(labels.length).fill(target), borderColor: 'red', borderDash: [5,5], pointRadius: 0 }
+                ]
+            }
+        });
+    }
+
+    function saveData() {
+        const rows = Array.from(document.querySelectorAll("#dataTable tbody tr"));
+        const matrix = rows.map(r => Array.from(r.querySelectorAll("input, span")).map(i => i.value || i.innerText));
+        
+        fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ sheetName: currentSheet, data: matrix })
+        }).then(() => alert("ส่งคำสั่งบันทึกสำเร็จ (กรุณารอ Google Script ประมวลผลสักครู่)"));
+    }
+
+    function exportToExcel() {
+        XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('dataTable')), `${currentSheet}_Export.xlsx`);
+    }
+
+    function takeCapture() {
+        html2canvas(document.getElementById('capture-area')).then(canvas => {
+            let a = document.createElement('a'); a.download = 'Analysis_Capture.png'; a.href = canvas.toDataURL(); a.click();
+        });
+    }
+</script>
+</body>
+</html>
