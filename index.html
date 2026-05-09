@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>NSO SATUN KPI 2569</title>
+    <title>NSO SATUN KPI 2569 - Wrap Text</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -11,72 +11,78 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --primary: #1e1e2d; --accent: #00A3AD; --danger: #ff4d4d; }
-        body { font-family: 'Noto Sans Thai', sans-serif; background: #f4f6f9; display: flex; height: 100vh; margin: 0; font-size: 12px; overflow: hidden; }
-        .sidebar { width: 240px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        body { font-family: 'Noto Sans Thai', sans-serif; background: #f4f6f9; display: flex; height: 100vh; margin: 0; font-size: 11px; overflow: hidden; }
+        .sidebar { width: 230px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .nav-btn { padding: 12px 20px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; }
+        .nav-btn { padding: 10px 18px; color: rgba(255,255,255,0.7); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; display: block; }
         .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent); }
-        .top-nav { height: 55px; background: white; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-        .content-body { flex: 1; padding: 15px; overflow-y: auto; }
-        .table-card { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 15px; }
+        .top-nav { height: 50px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+        .content-body { flex: 1; padding: 12px; overflow-y: auto; }
+        .table-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 10px; max-height: 78vh; overflow: auto; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc !important; position: sticky; top: 0; z-index: 10; padding: 8px; font-weight: 600; text-align: center; border: 1px solid #e2e8f0; }
-        td { border: 1px solid #e2e8f0; padding: 5px; vertical-align: middle; background: white !important; }
+        th { background: #f8f9fa !important; position: sticky; top: 0; z-index: 10; padding: 6px; font-weight: 600; text-align: center; border: 1px solid #eef2f7; font-size: 11px; }
+        td { border: 1px solid #eef2f7; padding: 4px; vertical-align: middle; background: white !important; font-size: 11px; }
+        
+        /* จุดสำคัญ: การตัดข้อความในคอลัมน์ตัวชี้วัด */
+        .wrap-column { 
+            min-width: 180px; 
+            max-width: 250px; 
+            white-space: normal !important; 
+            word-wrap: break-word; 
+            text-align: left !important;
+            line-height: 1.4;
+            padding: 8px !important;
+        }
+
         .high-alert { color: var(--danger) !important; font-weight: bold; }
-        input { width: 100%; border: none; background: transparent; text-align: center; font-size: 12px; }
-        textarea { width: 100%; min-height: 60px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 11px; padding: 5px; }
-        .chart-container { background: white; padding: 20px; border-radius: 8px; margin-top: 15px; height: 350px; }
+        input { width: 100%; border: none; background: transparent; text-align: center; font-size: 11px; }
+        textarea { width: 100%; min-height: 50px; border: 1px solid #eef2f7; border-radius: 4px; font-size: 10px; padding: 4px; }
+        .chart-box { background: white; padding: 15px; border-radius: 8px; margin-top: 10px; height: 320px; }
     </style>
 </head>
 <body>
 
 <nav class="sidebar">
-    <div class="p-4 text-center border-bottom border-secondary">
+    <div class="p-3 text-center border-bottom border-secondary">
         <h6 class="fw-bold mb-0">NSO SATUN 2569</h6>
-        <small class="text-secondary">KPI Management System</small>
     </div>
-    <div id="ward-nav-list"></div>
-    <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder2-open"></i> กองการ_68</a>
+    <div id="ward-nav"></div>
+    <a class="nav-btn" onclick="loadTab('กองการ_68')"><i class="bi bi-folder"></i> กองการ_68</a>
     <a class="nav-btn" onclick="loadTab('IC')"><i class="bi bi-activity"></i> IC Analytics</a>
     <a class="nav-btn" onclick="loadTab('NQA')"><i class="bi bi-shield-check"></i> NQA (Read-Only)</a>
 </nav>
 
 <main class="main-content">
     <div class="top-nav">
-        <h6 id="current-page-title" class="mb-0 text-primary fw-bold">กรุณาเลือกเมนู</h6>
+        <h6 id="current-title" class="mb-0 text-primary fw-bold">กรุณาเลือกเมนู</h6>
         <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-primary" onclick="saveData()"><i class="bi bi-cloud-arrow-up"></i> บันทึกข้อมูล</button>
-            <button class="btn btn-sm btn-dark" onclick="fetchData()"><i class="bi bi-arrow-repeat"></i> ดึงข้อมูลล่าสุด</button>
-            <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()"><i class="bi bi-file-earmark-excel"></i> Export Excel</button>
-            <button id="capture-btn" class="btn btn-sm btn-info text-white d-none" onclick="doCapture()"><i class="bi bi-camera"></i> Capture</button>
+            <button class="btn btn-sm btn-primary" onclick="saveData()"><i class="bi bi-save"></i> บันทึก</button>
+            <button class="btn btn-sm btn-dark" onclick="fetchData()"><i class="bi bi-arrow-repeat"></i> ดึงข้อมูล</button>
+            <button class="btn btn-sm btn-outline-success" onclick="exportExcel()"><i class="bi bi-file-excel"></i> Export</button>
+            <button id="cap-btn" class="btn btn-sm btn-info text-white d-none" onclick="doCapture()"><i class="bi bi-camera"></i> Capture</button>
         </div>
     </div>
 
-    <div class="content-body" id="report-area">
-        <div class="d-flex gap-3 mb-3">
-            <input type="text" id="kpi-search" class="form-control form-control-sm" style="max-width:250px" placeholder="🔍 ค้นหาตัวชี้วัด..." onkeyup="filterTable()">
-            <select id="month-filter" class="form-select form-select-sm" style="max-width:180px" onchange="filterTable()">
-                <option value="">-- กรองตามเดือน --</option>
-            </select>
+    <div class="content-body" id="capture-zone">
+        <div class="d-flex gap-2 mb-2">
+            <input type="text" id="kpi-filter" class="form-control form-control-sm" style="max-width:220px" placeholder="🔍 ค้นหาตัวชี้วัด..." onkeyup="filterRows()">
         </div>
-
-        <div id="table-view" class="table-card overflow-auto" style="max-height: 75vh;">
-            <p class="text-center py-5 text-muted">พร้อมใช้งาน กรุณาเลือกชีทงานจากเมนูทางด้านซ้าย</p>
+        <div id="table-container" class="table-card overflow-auto">
+            <p class="text-center py-5 text-muted">เลือกเมนูเพื่อดึงข้อมูล</p>
         </div>
-
-        <div id="ic-analytics-box" class="d-none">
-            <div class="chart-container shadow-sm"><canvas id="icCanvas"></canvas></div>
+        <div id="ic-chart-area" class="d-none">
+            <div class="chart-box"><canvas id="icLine"></canvas></div>
         </div>
     </div>
 </main>
 
 <script>
-    const APP_URI = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
-    let activeSheet = "", cachedData = [], chartObj = null;
+    const API_URI = "https://script.google.com/macros/s/AKfycbwrnmxTqTndEjvw2-CesCfm7A3zTQfAK5juajH0bcDs9fUjoPSbF4ul4CBXQhl_perujg/exec";
+    let activeSheet = "", currentData = [], chartInstance = null;
 
     window.onload = () => {
-        fetch(`${APP_URI}?action=getWards`).then(res => res.json()).then(wards => {
-            document.getElementById('ward-nav-list').innerHTML = wards.map(w => 
+        fetch(`${API_URI}?action=getWards`).then(res => res.json()).then(wards => {
+            document.getElementById('ward-nav').innerHTML = wards.map(w => 
                 `<a class="nav-btn" onclick="loadTab('${w}')"><i class="bi bi-hospital"></i> ${w}</a>`
             ).join('');
         });
@@ -84,111 +90,107 @@
 
     function loadTab(name) {
         activeSheet = name;
-        document.getElementById('current-page-title').innerText = "📍 ชีท: " + name;
-        document.getElementById('ic-analytics-box').classList.add('d-none');
-        document.getElementById('capture-btn').classList.add('d-none');
+        document.getElementById('current-title').innerText = "📍 " + name;
+        document.getElementById('ic-chart-area').classList.add('d-none');
+        document.getElementById('cap-btn').classList.add('d-none');
         fetchData();
     }
 
     function fetchData() {
-        const view = document.getElementById('table-view');
-        view.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><br>กำลังดึงข้อมูล...</div>';
-        fetch(`${APP_URI}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
-            cachedData = data;
-            renderDisplay(data);
-            if(activeSheet === 'IC') renderICChart(data);
+        const container = document.getElementById('table-container');
+        container.innerHTML = '<div class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> กำลังดึงข้อมูล...</div>';
+        fetch(`${API_URI}?action=getData&sheetName=${activeSheet}`).then(res => res.json()).then(data => {
+            currentData = data;
+            renderTable(data);
+            if(activeSheet === 'IC') renderIC(data);
         });
     }
 
-    function renderDisplay(data) {
+    function renderTable(data) {
         if(!data || data.length === 0) return;
         const head = data[0];
-        let html = `<table id="data-table"><thead><tr>`;
+        let html = `<table id="kpi-table"><thead><tr>`;
         head.forEach(h => html += `<th>${h}</th>`);
         html += `<th>แนบไฟล์</th></tr></thead><tbody>`;
 
         const targetIdx = head.indexOf('เป้าหมาย');
+        const kpiIdx = head.indexOf('รายการตัวชี้วัด');
 
         for(let i=1; i<data.length; i++){
             html += `<tr>`;
             data[i].forEach((cell, idx) => {
                 let targetVal = parseFloat(data[i][targetIdx]) || 0;
-                let currentVal = parseFloat(cell);
-                let alertClass = (!isNaN(currentVal) && currentVal > targetVal) ? "high-alert" : "";
+                let numVal = parseFloat(cell);
+                let isAlert = (!isNaN(numVal) && numVal > targetVal) ? "high-alert" : "";
                 let isReadOnly = (activeSheet === 'NQA' && head[idx] !== 'วิเคราะห์');
                 let display = (typeof cell === 'number') ? cell.toFixed(2) : (cell || "");
+                
+                // กำหนดคลาสพิเศษสำหรับคอลัมน์รายการตัวชี้วัดเพื่อทำการ Wrap Text
+                let specialClass = (idx === kpiIdx) ? "wrap-column" : "";
 
                 if(head[idx] === 'วิเคราะห์') {
-                    html += `<td><textarea onchange="updateCache(${i},${idx},this.value)">${display}</textarea></td>`;
+                    html += `<td><textarea onchange="updateData(${i},${idx},this.value)">${display}</textarea></td>`;
                 } else {
-                    html += `<td>${isReadOnly ? `<span>${display}</span>` : `<input type="text" class="${alertClass}" value="${display}" onchange="updateCache(${i},${idx},this.value)">`}</td>`;
+                    html += `<td class="${specialClass}">${isReadOnly ? `<span>${display}</span>` : `<input type="text" class="${isAlert}" value="${display}" onchange="updateData(${i},${idx},this.value)">`}</td>`;
                 }
             });
-            html += `<td class="text-center"><input type="file" style="font-size:10px" onchange="doUpload(this, ${i})"></td></tr>`;
+            html += `<td class="text-center"><input type="file" style="font-size:9px" onchange="uploadFile(this, ${i})"></td></tr>`;
         }
         html += `</tbody></table>`;
-        document.getElementById('table-view').innerHTML = html;
-        setupFilters(head);
+        document.getElementById('table-container').innerHTML = html;
     }
 
-    function updateCache(r, c, v) { cachedData[r][c] = v; }
+    function updateData(r, c, v) { currentData[r][c] = v; }
 
-    function renderICChart(data) {
-        document.getElementById('ic-analytics-box').classList.remove('d-none');
-        document.getElementById('capture-btn').classList.remove('d-none');
-        const xLabels = ["63","64","65","66","67","68","ต.ค.-68","พ.ย.-68","ธ.ค.-68","มค.69","กพ","มีค","เมย","พค","มิย","กค","สค","กย"];
-        const values = data[1].slice(2, 20); // Mapping ตาม Col ใน IC
-        const threshold = parseFloat(data[1][1]) || 0;
+    function renderIC(data) {
+        document.getElementById('ic-chart-area').classList.remove('d-none');
+        document.getElementById('cap-btn').classList.remove('d-none');
+        const labels = ["63","64","65","66","67","68","ต.ค.-68","พ.ย.-68","ธ.ค.-68","มค.69","กพ","มีค","เมย","พค","มิย","กค","สค","กย"];
+        const vals = data[1].slice(2, 20);
+        const goal = parseFloat(data[1][1]) || 0;
 
-        if(chartObj) chartObj.destroy();
-        chartObj = new Chart(document.getElementById('icCanvas'), {
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(document.getElementById('icLine'), {
             type: 'line',
             data: {
-                labels: xLabels,
+                labels: labels,
                 datasets: [
-                    { label: 'ผลลัพธ์', data: values, borderColor: '#00A3AD', backgroundColor: 'rgba(0,163,173,0.1)', fill: true, tension: 0.3 },
-                    { label: 'เกณฑ์เป้าหมาย', data: Array(xLabels.length).fill(threshold), borderColor: 'red', borderDash: [5,5], pointRadius: 0 }
+                    { label: 'ผลลัพธ์', data: vals, borderColor: '#00A3AD', tension: 0.3, fill: false },
+                    { label: 'เกณฑ์', data: Array(labels.length).fill(goal), borderColor: 'red', borderDash: [5,5], pointRadius: 0 }
                 ]
             },
-            options: { maintainAspectRatio: false, plugins: { legend: { labels: { font: { size: 11 } } } } }
+            options: { maintainAspectRatio: false }
         });
     }
 
-    function setupFilters(head) {
-        const sel = document.getElementById('month-filter');
-        sel.innerHTML = '<option value="">-- กรองเดือน --</option>';
-        head.forEach((h, i) => { if(h.includes('ตค') || h.includes('มค') || h.includes('ต.ค.')) sel.add(new Option(h, i)); });
-    }
-
-    function filterTable() {
-        const q = document.getElementById('kpi-search').value.toLowerCase();
-        const rows = document.querySelectorAll("#data-table tbody tr");
+    function filterRows() {
+        const q = document.getElementById('kpi-filter').value.toLowerCase();
+        const rows = document.querySelectorAll("#kpi-table tbody tr");
         rows.forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none");
     }
 
     function saveData() {
-        const body = cachedData.slice(1);
-        fetch(APP_URI, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: body }) })
-        .then(() => alert("✅ ส่งคำสั่งบันทึกสำเร็จ (ข้อมูลจะปรากฏใน Sheets ใน 3-5 วินาที)"));
+        const body = currentData.slice(1);
+        fetch(API_URI, { method: "POST", mode: "no-cors", body: JSON.stringify({ sheetName: activeSheet, data: body }) })
+        .then(() => alert("✅ ส่งคำสั่งบันทึกสำเร็จ"));
     }
 
-    async function doUpload(input, rIdx) {
+    async function uploadFile(input, rIdx) {
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const res = await fetch(APP_URI, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
+            const res = await fetch(API_URI, { method: "POST", body: JSON.stringify({ action: 'uploadFile', file: e.target.result, name: file.name }) });
             const url = await res.text();
-            // นำ Link ไปต่อท้ายในช่องวิเคราะห์
-            const anaIdx = cachedData[0].indexOf('วิเคราะห์');
-            cachedData[rIdx][anaIdx] += `\n📎 ไฟล์แนบ: ${url}`;
-            alert("📁 อัปโหลดสำเร็จและบันทึก Link ในช่องวิเคราะห์แล้ว");
+            const anaIdx = currentData[0].indexOf('วิเคราะห์');
+            currentData[rIdx][anaIdx] += `\n📎 ไฟล์: ${url}`;
+            alert("📁 อัปโหลดและบันทึก Link แล้ว");
             fetchData();
         };
         reader.readAsDataURL(file);
     }
 
-    function exportToExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('data-table')), `${activeSheet}_Report.xlsx`); }
-    function doCapture() { html2canvas(document.getElementById('report-area')).then(cv => { let a = document.createElement('a'); a.download = 'Dashboard_Export.png'; a.href = cv.toDataURL(); a.click(); }); }
+    function exportExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('kpi-table')), `${activeSheet}_Data.xlsx`); }
+    function doCapture() { html2canvas(document.getElementById('capture-zone')).then(cv => { let a = document.createElement('a'); a.download = 'Capture.png'; a.href = cv.toDataURL(); a.click(); }); }
 </script>
 </body>
 </html>
